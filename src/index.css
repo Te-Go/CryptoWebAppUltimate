@@ -1,0 +1,427 @@
+@import "tailwindcss";
+
+/* ============================================
+   KRIPTO-PARALAR.COM DESIGN SYSTEM
+   Premium Neon Fintech Theme
+   ============================================ */
+
+/* Theme Variables */
+@theme {
+  /* Background Colors */
+  --color-bg-primary: #0B0E11;
+  --color-bg-secondary: #12161C;
+  --color-bg-tertiary: #1A1F26;
+  --color-bg-card: rgba(18, 22, 28, 0.85);
+  --color-bg-card-hover: rgba(26, 31, 38, 0.95);
+
+  /* Neon Accent Colors */
+  --color-neon-cyan: #00E5FF;
+  --color-neon-blue: #00A3FF;
+  --color-neon-purple: #A855F7;
+  --color-neon-pink: #EC4899;
+
+  /* Semantic Colors */
+  --color-profit: #00FF88;
+  --color-loss: #FF3366;
+  --color-warning: #FFAA00;
+  --color-accent-gold: #FCD535;
+
+  /* Text Colors */
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #8B9AAB;
+  --color-text-muted: #5B6574;
+
+  /* Border Colors */
+  --color-border: rgba(139, 154, 171, 0.15);
+  --color-border-focus: rgba(0, 229, 255, 0.5);
+
+  /* Glow Effects */
+  --glow-cyan: 0 0 20px rgba(0, 229, 255, 0.3), 0 0 40px rgba(0, 229, 255, 0.1);
+  --glow-profit: 0 0 15px rgba(0, 255, 136, 0.3);
+  --glow-loss: 0 0 15px rgba(255, 51, 102, 0.3);
+  --glow-gold: 0 0 20px rgba(252, 213, 53, 0.3);
+
+  /* Shadows */
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.6);
+
+  /* Font Family */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Outfit', 'Inter', system-ui, sans-serif;
+
+  /* Border Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+}
+
+/* Light Theme Overrides (Electric Ice) */
+:root.light {
+  /* Background Colors - Icy/Clean */
+  --color-bg-primary: #F0F9FF;
+  /* Pale Glacial Blue */
+  --color-bg-secondary: #FFFFFF;
+  /* Pure White */
+  --color-bg-tertiary: #E0F2FE;
+  /* Light Blue-Grey */
+  --color-bg-card: rgba(255, 255, 255, 0.7);
+  /* White Frost */
+  --color-bg-card-hover: rgba(255, 255, 255, 0.9);
+
+  /* Text Colors - High Contrast */
+  --color-text-primary: #0F172A;
+  /* Deep Navy */
+  --color-text-secondary: #475569;
+  /* Slate Grey */
+  --color-text-muted: #94A3B8;
+  /* Muted Slate */
+
+  /* Border Colors */
+  --color-border: rgba(148, 163, 184, 0.2);
+  --color-border-focus: rgba(0, 163, 255, 0.5);
+
+  /* Adjusted Neon Accents for Light Mode readability */
+  --color-neon-cyan: #0284C7;
+  /* Darker Cyan for white bg */
+  --color-neon-blue: #0369A1;
+  /* Darker Blue */
+  --color-neon-purple: #7C3AED;
+  --color-neon-pink: #DB2777;
+
+  /* Adjusted Semantic Colors */
+  --color-accent-gold: #D97706;
+  /* Amber Gold for text */
+}
+
+/* Base Styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  min-height: 100vh;
+  /* Dark Mode Gradient */
+  background-image:
+    radial-gradient(ellipse at top, rgba(0, 163, 255, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom right, rgba(0, 229, 255, 0.03) 0%, transparent 50%);
+}
+
+:root.light body {
+  /* Light Mode Gradient - Subtle Icy Glow */
+  background-image:
+    radial-gradient(ellipse at top, rgba(2, 132, 199, 0.03) 0%, transparent 60%),
+    radial-gradient(ellipse at bottom left, rgba(56, 189, 248, 0.05) 0%, transparent 50%);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-text-muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* ============================================
+   COMPONENT UTILITIES
+   ============================================ */
+
+/* Glass Card */
+.glass-card {
+  background: var(--color-bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  background: var(--color-bg-card-hover);
+  border-color: rgba(0, 229, 255, 0.2);
+  box-shadow: var(--shadow-elevated), var(--glow-cyan);
+}
+
+/* Neon Border */
+.neon-border {
+  position: relative;
+  border: 1px solid transparent;
+  background: linear-gradient(var(--color-bg-secondary), var(--color-bg-secondary)) padding-box,
+    linear-gradient(135deg, var(--color-neon-cyan), var(--color-neon-blue), var(--color-neon-purple)) border-box;
+}
+
+/* Neon Glow Text */
+.neon-text {
+  color: var(--color-neon-cyan);
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.5), 0 0 20px rgba(0, 229, 255, 0.3);
+}
+
+.neon-text-gold {
+  color: var(--color-accent-gold);
+  text-shadow: 0 0 10px rgba(252, 213, 53, 0.5), 0 0 20px rgba(252, 213, 53, 0.3);
+}
+
+/* Neon Button */
+.neon-button {
+  background: linear-gradient(135deg, var(--color-neon-cyan), var(--color-neon-blue));
+  color: var(--color-bg-primary);
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 229, 255, 0.3);
+}
+
+.neon-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(0, 229, 255, 0.5), var(--glow-cyan);
+}
+
+.neon-button:active {
+  transform: translateY(0);
+}
+
+/* Profit/Loss Colors */
+.text-profit {
+  color: var(--color-profit);
+}
+
+.text-loss {
+  color: var(--color-loss);
+}
+
+.bg-profit {
+  background: rgba(0, 255, 136, 0.15);
+}
+
+.bg-loss {
+  background: rgba(255, 51, 102, 0.15);
+}
+
+/* Price Change Badges */
+.price-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.price-badge.positive {
+  background: rgba(0, 255, 136, 0.15);
+  color: var(--color-profit);
+}
+
+.price-badge.negative {
+  background: rgba(255, 51, 102, 0.15);
+  color: var(--color-loss);
+}
+
+/* Shimmer Loading Effect */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg,
+      var(--color-bg-tertiary) 25%,
+      var(--color-bg-card-hover) 50%,
+      var(--color-bg-tertiary) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Pulse Animation */
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 5px rgba(0, 229, 255, 0.3);
+  }
+
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.5);
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Ticker Scroll Animation */
+@keyframes ticker-scroll {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.ticker-scroll {
+  animation: ticker-scroll 30s linear infinite;
+}
+
+/* Fade In Animation */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fade-in-up 0.5s ease-out forwards;
+}
+
+/* Category Chip */
+.category-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.category-chip:hover {
+  background: var(--color-bg-card-hover);
+  border-color: var(--color-neon-cyan);
+  color: var(--color-text-primary);
+}
+
+.category-chip.active {
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.15), rgba(0, 163, 255, 0.15));
+  border-color: var(--color-neon-cyan);
+  color: var(--color-neon-cyan);
+}
+
+/* Hide scrollbar but keep functionality */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Container */
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 0 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding: 0 2rem;
+  }
+}
+
+/* Table Styles */
+.crypto-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.crypto-table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  background: var(--color-bg-secondary);
+  z-index: 10;
+}
+
+.crypto-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.crypto-table tbody tr {
+  transition: background 0.2s ease;
+}
+
+.crypto-table tbody tr:hover {
+  background: var(--color-bg-card-hover);
+}
+
+/* Mobile Card View */
+@media (max-width: 768px) {
+  .mobile-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--color-bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    margin-bottom: 0.75rem;
+  }
+}
