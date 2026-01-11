@@ -1,5 +1,6 @@
+import { useState, useMemo } from 'react'; // Add imports
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Star, ExternalLink, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowLeft, Star, ExternalLink, TrendingUp, TrendingDown, Clock } from 'lucide-react';
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { Header } from '../components/layout/Header';
 import { BottomNav } from '../components/layout/BottomNav';
@@ -9,19 +10,48 @@ import { NeonButton } from '../components/ui/NeonButton';
 import { SentimentVote } from '../components/market/SentimentVote';
 import { SEOHead } from '../components/seo/SEOHead';
 import { SchemaMarkup } from '../components/seo/SchemaMarkup';
-import { CoinSummary } from '../components/seo/CoinSummary';
-import { PeopleAlsoAsk, generateCoinFAQs } from '../components/seo/PeopleAlsoAsk';
+import { PeopleAlsoAsk } from '../components/seo/PeopleAlsoAsk';
 import { HeaderAd, InContentAd } from '../components/ads/AdSlot';
 import { CryptoConverter } from '../components/tools/CryptoConverter';
+import { CoinLayoutFactory } from '../components/coin/CoinLayoutFactory';
+import { CoinComparison } from '../components/coin/CoinComparison';
+import { getSmartSummary, getSmartFAQs } from '../components/seo/SmartContentEngine';
 import { useMarket } from '../context/MarketContext';
 import { useCurrency } from '../context/CurrencyContext';
+// Import mock generator
+import { generateHistory } from '../data/mockCryptos';
+import { LatestNews } from '../components/news/LatestNews';
 
 export function CoinDetailPage() {
     const { id } = useParams<{ id: string }>();
     const { cryptos, favorites, toggleFavorite } = useMarket();
     const { formatPrice, formatLargeNumber } = useCurrency();
+    const [timeframe, setTimeframe] = useState<'1h' | '24h' | '7d' | '30d' | '3m'>('24h');
 
     const coin = cryptos.find((c) => c.id === id);
+
+    const isFavorite = coin ? favorites.includes(coin.id) : false;
+    const isPositive = coin ? coin.change24h >= 0 : false;
+
+    // Smart SEO Content
+    const summary = coin ? getSmartSummary(coin) : '';
+    const faqs = coin ? getSmartFAQs(coin) : [];
+    const lastUpdated = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+
+    // Generate chart data based on loaded coin AND selected timeframe
+    const chartData = useMemo(() => {
+        if (!coin) return [];
+
+        // If 24h, use the static sparkline to keep it consistent with home, otherwise generate
+        const rawData = timeframe === '24h'
+            ? coin.sparkline
+            : generateHistory(coin.price, timeframe);
+
+        return rawData.map((price, index) => ({
+            time: index.toString(), // Simplified time x-axis
+            price,
+        }));
+    }, [coin, timeframe]);
 
     if (!coin) {
         return (
@@ -36,16 +66,6 @@ export function CoinDetailPage() {
         );
     }
 
-    const isFavorite = favorites.includes(coin.id);
-    const isPositive = coin.change24h >= 0;
-    const faqs = generateCoinFAQs(coin.name, coin.symbol);
-
-    // Generate chart data from sparkline
-    const chartData = coin.sparkline.map((price, index) => ({
-        time: `${index}s`,
-        price,
-    }));
-
     const stats = [
         { label: 'Piyasa Değeri', value: formatLargeNumber(coin.marketCap) },
         { label: '24s Hacim', value: formatLargeNumber(coin.volume24h) },
@@ -57,22 +77,16 @@ export function CoinDetailPage() {
         <div className="min-h-screen bg-bg-primary pb-20 lg:pb-0">
             {/* SEO Meta Tags */}
             <SEOHead
-                title={`${coin.name} (${coin.symbol}) Fiyatı ve Grafiği`}
-                description={`${coin.name} (${coin.symbol}) güncel fiyatı, piyasa değeri ve 24 saatlik değişim grafiği. ${coin.name} yorumları ve analizi Kripto Paralar'da.`}
-                keywords={[coin.name, `${coin.name} fiyatı`, `${coin.name} satın al`, 'kripto para']}
+                title={`${coin.name} (${coin.symbol}) Fiyatı: ₺${coin.price.toFixed(2)} | Canlı Grafik ve Yorumlar`}
+                description={summary.substring(0, 160) + '...'}
+                keywords={[coin.name, `${coin.name} fiyatı`, `${coin.name} yorum`, `${coin.name} nedir`, coin.symbol, ...coin.category]}
                 canonicalUrl={`/coin/${coin.id}`}
                 ogImage={coin.image}
             />
 
             {/* Schema Structured Data */}
-            <SchemaMarkup
-                type="coin"
-                data={coin}
-            />
-            <SchemaMarkup
-                type="faq"
-                faqs={faqs}
-            />
+            <SchemaMarkup type="coin" data={coin} />
+            <SchemaMarkup type="faq" faqs={faqs} />
             <SchemaMarkup
                 type="breadcrumb"
                 breadcrumbs={[
@@ -138,6 +152,11 @@ export function CoinDetailPage() {
                                         {Math.abs(coin.change24h).toFixed(2)}%
                                     </span>
                                 </div>
+                                {/* Freshness Signal */}
+                                <div className="flex items-center gap-1 mt-2 text-xs text-text-muted">
+                                    <Clock className="w-3 h-3" />
+                                    <span>Son güncelleme: {lastUpdated}</span>
+                                </div>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -146,8 +165,7 @@ export function CoinDetailPage() {
                                 onClick={() => toggleFavorite(coin.id)}
                             >
                                 <Star
-                                    className={`w-4 h-4 ${isFavorite ? 'fill-accent-gold text-accent-gold' : ''
-                                        }`}
+                                    className={`w-4 h-4 ${isFavorite ? 'fill-accent-gold text-accent-gold' : ''}`}
                                 />
                                 {isFavorite ? 'Favorilerde' : 'Favorilere Ekle'}
                             </NeonButton>
@@ -159,17 +177,60 @@ export function CoinDetailPage() {
                     </div>
                 </GlassCard>
 
-                {/* AI Text Summary - SEO Optimization */}
-                <CoinSummary coin={coin} />
+                {/* Dynamic Archetype Modules (Layer 1, DeFi, etc.) */}
+                <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+                    <CoinLayoutFactory coin={coin} />
+                </div>
+
+                {/* Smart Comparison Module (SEO Context Anchor) */}
+                <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                    <CoinComparison coin={coin} />
+                </div>
+
+                {/* Smart Summary - Replacing Static Text */}
+                <GlassCard className="p-6" hover={false}>
+                    <h2 className="text-lg font-semibold text-text-primary mb-4 font-display">
+                        {coin.name} Nedir? Güncel Analiz
+                    </h2>
+                    <p className="text-text-secondary leading-relaxed">
+                        {summary}
+                    </p>
+                    <div className="flex flex-wrap gap-2 mt-4">
+                        {coin.category.map((cat) => (
+                            <span
+                                key={cat}
+                                className="px-3 py-1 bg-bg-tertiary text-text-secondary text-sm rounded-full capitalize"
+                            >
+                                {cat.replace('-', ' ')}
+                            </span>
+                        ))}
+                    </div>
+                </GlassCard>
 
                 {/* Community Sentiment */}
                 <SentimentVote coinId={coin.id} />
 
                 {/* Price Chart */}
                 <GlassCard className="p-6" hover={false}>
-                    <h2 className="text-lg font-semibold text-text-primary mb-4 font-display">
-                        Fiyat Grafiği (24 Saat)
-                    </h2>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
+                        <h2 className="text-lg font-semibold text-text-primary font-display">
+                            Fiyat Grafiği
+                        </h2>
+                        <div className="flex bg-bg-secondary/50 rounded-lg p-1 overflow-x-auto">
+                            {(['1h', '24h', '7d', '30d', '3m'] as const).map((tf) => (
+                                <button
+                                    key={tf}
+                                    onClick={() => setTimeframe(tf)}
+                                    className={`px-3 py-1 rounded-md text-sm font-medium transition-all whitespace-nowrap ${timeframe === tf
+                                        ? 'bg-neon-blue/20 text-neon-blue shadow-[0_0_10px_rgba(0,243,255,0.2)]'
+                                        : 'text-text-muted hover:text-text-primary hover:bg-white/5'
+                                        }`}
+                                >
+                                    {tf === '1h' ? '1S' : tf === '24h' ? '24S' : tf === '7d' ? '7G' : tf === '30d' ? '30G' : '3A'}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                     <div className="h-64 md:h-80">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={chartData}>
@@ -192,10 +253,11 @@ export function CoinDetailPage() {
                                     axisLine={false}
                                     tickLine={false}
                                     tick={{ fill: '#8B9AAB', fontSize: 12 }}
+                                    interval={Math.floor(chartData.length / 6)}
                                 />
                                 <YAxis
                                     hide
-                                    domain={['dataMin - 100', 'dataMax + 100']}
+                                    domain={['auto', 'auto']}
                                 />
                                 <Tooltip
                                     contentStyle={{
@@ -212,80 +274,58 @@ export function CoinDetailPage() {
                                     stroke={isPositive ? '#00FF88' : '#FF3366'}
                                     strokeWidth={2}
                                     fill="url(#priceGradient)"
+                                    animationDuration={500}
                                 />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
                 </GlassCard>
 
-                {/* In Content Ad Slot */}
-                <InContentAd />
+                {/* Latest News & Comments */}
+                <LatestNews className="py-2" />
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    {stats.map((stat) => (
-                        <GlassCard key={stat.label} className="p-4" hover={false}>
-                            <p className="text-text-muted text-sm mb-1">{stat.label}</p>
-                            <p className="text-lg font-semibold text-text-primary">{stat.value}</p>
-                        </GlassCard>
-                    ))}
+                {/* Price Changes & Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2 grid grid-cols-2 gap-4">
+                        {stats.map((stat) => (
+                            <GlassCard key={stat.label} className="p-4" hover={false}>
+                                <p className="text-text-muted text-sm mb-1">{stat.label}</p>
+                                <p className="text-lg font-semibold text-text-primary">{stat.value}</p>
+                            </GlassCard>
+                        ))}
+                    </div>
+                    <GlassCard className="p-6" hover={false}>
+                        <h2 className="text-lg font-semibold text-text-primary mb-4 font-display">
+                            Zaman Dilimleri
+                        </h2>
+                        <div className="grid grid-cols-3 gap-4">
+                            {[
+                                { label: '1S', value: coin.change1h },
+                                { label: '24S', value: coin.change24h },
+                                { label: '7G', value: coin.change7d },
+                            ].map((item) => (
+                                <div key={item.label} className="text-center">
+                                    <p className="text-text-muted text-sm mb-2">{item.label}</p>
+                                    <p
+                                        className={`text-lg font-bold ${item.value >= 0 ? 'text-profit' : 'text-loss'
+                                            }`}
+                                    >
+                                        {item.value >= 0 ? '+' : ''}
+                                        {item.value.toFixed(2)}%
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </GlassCard>
                 </div>
-
-                {/* Price Changes */}
-                <GlassCard className="p-6" hover={false}>
-                    <h2 className="text-lg font-semibold text-text-primary mb-4 font-display">
-                        Fiyat Değişimi
-                    </h2>
-                    <div className="grid grid-cols-3 gap-4">
-                        {[
-                            { label: '1 Saat', value: coin.change1h },
-                            { label: '24 Saat', value: coin.change24h },
-                            { label: '7 Gün', value: coin.change7d },
-                        ].map((item) => (
-                            <div key={item.label} className="text-center">
-                                <p className="text-text-muted text-sm mb-2">{item.label}</p>
-                                <p
-                                    className={`text-xl font-bold ${item.value >= 0 ? 'text-profit' : 'text-loss'
-                                        }`}
-                                >
-                                    {item.value >= 0 ? '+' : ''}
-                                    {item.value.toFixed(2)}%
-                                </p>
-                            </div>
-                        ))}
-                    </div>
-                </GlassCard>
-
-                {/* About Section */}
-                <GlassCard className="p-6" hover={false}>
-                    <h2 className="text-lg font-semibold text-text-primary mb-4 font-display">
-                        {coin.name} Hakkında
-                    </h2>
-                    <p className="text-text-secondary leading-relaxed">
-                        {coin.name} ({coin.symbol}), kripto para piyasasındaki en önemli dijital varlıklardan biridir.
-                        Merkeziyetsiz yapısı ve blockchain teknolojisi sayesinde dünya genelinde milyonlarca kullanıcı
-                        tarafından tercih edilmektedir. Piyasa değeri ve işlem hacmi açısından sektörün öncü
-                        projelerinden biri olarak kabul edilmektedir.
-                    </p>
-                    <div className="flex flex-wrap gap-2 mt-4">
-                        {coin.category.map((cat) => (
-                            <span
-                                key={cat}
-                                className="px-3 py-1 bg-bg-tertiary text-text-secondary text-sm rounded-full capitalize"
-                            >
-                                {cat.replace('-', ' ')}
-                            </span>
-                        ))}
-                    </div>
-                </GlassCard>
 
                 {/* Crypto Converter */}
                 <CryptoConverter />
 
-                {/* People Also Asked - FAQ */}
+                {/* Smart FAQ */}
                 <PeopleAlsoAsk
                     faqs={faqs}
-                    title={`${coin.symbol} Sıkça Sorulan Sorular`}
+                    title={`${coin.name} Hakkında Sıkça Sorulan Sorular`}
                 />
             </main>
 

@@ -8,49 +8,11 @@ import { SEOHead } from '../components/seo/SEOHead';
 import { SchemaMarkup } from '../components/seo/SchemaMarkup';
 import { HeaderAd, SidebarAd, LargeRectAd } from '../components/ads/AdSlot';
 
-interface Article {
-    id: string;
-    slug: string;
-    title: string;
-    excerpt: string;
-    author: string;
-    date: string;
-    category: string;
-    image: string;
-}
+import { mockNews } from '../data/mockNews';
 
-const mockArticles: Article[] = [
-    {
-        id: '1',
-        slug: 'bitcoin-boga-sezonu-hazirliklari-100-bin-dolar-hedefi',
-        title: 'Bitcoin (BTC) Boğa Sezonuna Hazırlanıyor: 100.000 Dolar Hedefi Gerçekçi mi?',
-        excerpt: 'Kripto para piyasasının lideri Bitcoin, kurumsal alımlar ve yaklaşan halving döngüsüyle yeni bir boğa koşusuna hazırlanıyor. Analistler 100 bin dolar hedefini işaret ediyor.',
-        author: 'Ahmet Yılmaz',
-        date: '10 Ocak 2026',
-        category: 'Analiz',
-        image: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?q=80&w=2069&auto=format&fit=crop' // Placeholder until internal assets serve
-    },
-    {
-        id: '2',
-        slug: 'turkiye-kripto-para-duzenlemesi-yasa-tasarisi-detaylari',
-        title: "Türkiye'de Kripto Para Düzenlemesi: Yeni Yasa Tasarısı Neler Getiriyor?",
-        excerpt: 'TBMM gündemindeki yeni kripto varlık yasa tasarısı, borsalara lisans zorunluluğu ve vergilendirme konularını içeriyor. İşte tasarıdan öne çıkan başlıklar.',
-        author: 'Zeynep Kaya',
-        date: '9 Ocak 2026',
-        category: 'Düzenleme',
-        image: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?q=80&w=1974&auto=format&fit=crop'
-    },
-    {
-        id: '3',
-        slug: 'ethereum-etf-onayi-altcoin-rallisi-basliyor-mu',
-        title: 'Ethereum ETF Onayı Bekleniyor: Altcoin Rallisi Başlayacak mı?',
-        excerpt: "ABD SEC'in Ethereum Spot ETF başvurularını onaylaması beklenirken, piyasada altcoin rallisi beklentisi artıyor. Ethereum ekosistemindeki son gelişmeler.",
-        author: 'Mehmet Demir',
-        date: '8 Ocak 2026',
-        category: 'Altcoinler',
-        image: 'https://images.unsplash.com/photo-1622790698141-94e30457ef12?q=80&w=2072&auto=format&fit=crop'
-    }
-];
+// Transform mockNews to match NewsPage structure if needed, or just use it directly
+// For this page we want the "internal" articles (ids 5, 6, 7) that have slugs
+const newsArticles = mockNews.filter(n => n.slug);
 
 export function NewsPage() {
     return (
@@ -87,17 +49,17 @@ export function NewsPage() {
                         </div>
 
                         {/* Featured Article */}
-                        <Link to={`/haberler/${mockArticles[0].slug}`} className="block group">
+                        <Link to={`/haberler/${newsArticles[0].slug}`} className="block group">
                             <GlassCard className="overflow-hidden" hover={true}>
                                 <div className="aspect-video w-full overflow-hidden relative">
                                     <img
-                                        src={mockArticles[0].image}
-                                        alt={mockArticles[0].title}
+                                        src={newsArticles[0].image}
+                                        alt={newsArticles[0].title}
                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                     />
                                     <div className="absolute top-4 left-4">
                                         <span className="bg-neon-cyan/90 text-bg-primary px-3 py-1 rounded text-sm font-bold shadow-lg">
-                                            {mockArticles[0].category}
+                                            {newsArticles[0].category}
                                         </span>
                                     </div>
                                 </div>
@@ -105,18 +67,18 @@ export function NewsPage() {
                                     <div className="flex items-center gap-4 text-xs text-text-muted mb-3">
                                         <span className="flex items-center gap-1">
                                             <Calendar className="w-3 h-3" />
-                                            {mockArticles[0].date}
+                                            {newsArticles[0].time}
                                         </span>
                                         <span className="flex items-center gap-1">
                                             <User className="w-3 h-3" />
-                                            {mockArticles[0].author}
+                                            {newsArticles[0].source}
                                         </span>
                                     </div>
                                     <h2 className="text-2xl font-bold text-text-primary mb-3 group-hover:text-neon-cyan transition-colors">
-                                        {mockArticles[0].title}
+                                        {newsArticles[0].title}
                                     </h2>
                                     <p className="text-text-secondary line-clamp-2">
-                                        {mockArticles[0].excerpt}
+                                        {newsArticles[0].excerpt}
                                     </p>
                                 </div>
                             </GlassCard>
@@ -124,7 +86,7 @@ export function NewsPage() {
 
                         {/* Recent News Grid */}
                         <div className="grid md:grid-cols-2 gap-6">
-                            {mockArticles.slice(1).map((article) => (
+                            {newsArticles.slice(1).map((article) => (
                                 <Link key={article.id} to={`/haberler/${article.slug}`} className="block group">
                                     <GlassCard className="h-full flex flex-col overflow-hidden" hover={true}>
                                         <div className="aspect-video w-full overflow-hidden relative">
@@ -143,7 +105,7 @@ export function NewsPage() {
                                             <div className="flex items-center gap-3 text-[10px] text-text-muted mb-2">
                                                 <span className="flex items-center gap-1">
                                                     <Calendar className="w-3 h-3" />
-                                                    {article.date}
+                                                    {article.time}
                                                 </span>
                                             </div>
                                             <h3 className="text-lg font-bold text-text-primary mb-2 line-clamp-2 group-hover:text-neon-cyan transition-colors">
@@ -166,7 +128,7 @@ export function NewsPage() {
                     <aside className="w-full lg:w-80 space-y-8">
                         <SidebarAd />
 
-                        <GlassCard className="p-6 sticky top-24">
+                        <GlassCard className="p-6 sticky lg:fixed lg:top-24 lg:w-80 z-10">
                             <h3 className="text-lg font-semibold text-text-primary mb-4 font-display border-b border-white/5 pb-2">
                                 Popüler Kategoriler
                             </h3>
@@ -189,7 +151,7 @@ export function NewsPage() {
                 </div>
             </main>
 
-            <Footer />
+            <Footer showAd={false} />
             <BottomNav />
         </div>
     );

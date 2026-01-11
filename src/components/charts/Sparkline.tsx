@@ -13,6 +13,8 @@ export function Sparkline({
     width = 100,
     height = 32
 }: SparklineProps) {
+    if (!data || !Array.isArray(data) || data.length === 0) return null;
+
     const chartData = data.map((value, index) => ({ index, value }));
     const color = positive ? '#00FF88' : '#FF3366';
 

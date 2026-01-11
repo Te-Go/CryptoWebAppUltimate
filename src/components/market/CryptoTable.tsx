@@ -1,321 +1,143 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Star, ChevronUp, ChevronDown, TrendingUp, TrendingDown } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Star, ArrowUp, ArrowDown } from 'lucide-react';
 import { useMarket } from '../../context/MarketContext';
-import { useTimeframe } from '../../context/TimeframeContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { Sparkline } from '../charts/Sparkline';
-import { getChangeByTimeframe, type Crypto } from '../../data/mockCryptos';
+import { useNavigate } from 'react-router-dom';
 
-type SortField = 'rank' | 'name' | 'price' | 'change' | 'marketCap' | 'volume24h';
-type SortDirection = 'asc' | 'desc';
+export const CryptoTable: React.FC = () => {
+    const { filteredCryptos, favorites, toggleFavorite, loading, error } = useMarket();
+    const { formatPrice, formatLargeNumber, currency } = useCurrency();
+    const navigate = useNavigate();
 
-function ChangeCell({ value }: { value: number }) {
-    const isPositive = value >= 0;
-    return (
-        <span
-            className={`inline-flex items-center gap-1 ${isPositive ? 'text-profit' : 'text-loss'
-                }`}
-        >
-            {isPositive ? (
-                <TrendingUp className="w-3 h-3" />
-            ) : (
-                <TrendingDown className="w-3 h-3" />
-            )}
-            {Math.abs(value).toFixed(2)}%
-        </span>
-    );
-}
+    // Ensure we have data to map
+    const cryptosToDisplay = filteredCryptos || [];
 
-function SortHeader({
-    label,
-    field,
-    currentSort,
-    currentDirection,
-    onSort,
-    className = '',
-}: {
-    label: string;
-    field: SortField;
-    currentSort: SortField;
-    currentDirection: SortDirection;
-    onSort: (field: SortField) => void;
-    className?: string;
-}) {
-    const isActive = currentSort === field;
+    if (loading && cryptosToDisplay.length === 0) {
+        return (
+            <div className="w-full h-64 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    if (error && cryptosToDisplay.length === 0) {
+        return (
+            <div className="w-full p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-center">
+                Veri yüklenirken bir hata oluştu: {error}
+            </div>
+        );
+    }
 
     return (
-        <th
-            className={`cursor-pointer select-none hover:text-text-primary transition-colors ${className}`}
-            onClick={() => onSort(field)}
-        >
-            <div className="flex items-center gap-1">
-                {label}
-                {isActive && (
-                    currentDirection === 'asc' ? (
-                        <ChevronUp className="w-3 h-3" />
-                    ) : (
-                        <ChevronDown className="w-3 h-3" />
-                    )
-                )}
-            </div>
-        </th>
-    );
-}
-
-// Mobile Card Component
-function CryptoCard({ crypto, isFavorite, onToggleFavorite, changeValue, formattedPrice, formattedMarketCap, formattedVolume }: {
-    crypto: Crypto;
-    isFavorite: boolean;
-    onToggleFavorite: () => void;
-    changeValue: number;
-    formattedPrice: string;
-    formattedMarketCap: string;
-    formattedVolume: string;
-}) {
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mobile-card"
-        >
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={(e) => {
-                            e.preventDefault();
-                            onToggleFavorite();
-                        }}
-                        className="touch-manipulation"
-                    >
-                        <Star
-                            className={`w-4 h-4 ${isFavorite ? 'fill-accent-gold text-accent-gold' : 'text-text-muted'
-                                }`}
-                        />
-                    </button>
-                    <span className="text-text-muted text-sm w-6">#{crypto.rank}</span>
-                    <img src={crypto.image} alt={crypto.name} className="w-8 h-8 rounded-full" />
-                    <div>
-                        <p className="font-semibold text-text-primary">{crypto.name}</p>
-                        <p className="text-sm text-text-muted">{crypto.symbol}</p>
-                    </div>
-                </div>
-                <div className="text-right">
-                    <p className="font-semibold text-text-primary">{formattedPrice}</p>
-                    <ChangeCell value={changeValue} />
-                </div>
-            </div>
-            <div className="flex items-center justify-between pt-2 border-t border-border mt-2">
-                <div>
-                    <p className="text-xs text-text-muted">Piyasa Değeri</p>
-                    <p className="text-sm font-medium text-text-secondary">
-                        {formattedMarketCap}
-                    </p>
-                </div>
-                <div>
-                    <p className="text-xs text-text-muted">24s Hacim</p>
-                    <p className="text-sm font-medium text-text-secondary">
-                        {formattedVolume}
-                    </p>
-                </div>
-                <Sparkline data={crypto.sparkline} positive={changeValue >= 0} />
-            </div>
-        </motion.div>
-    );
-}
-
-export function CryptoTable() {
-    const { filteredCryptos, favorites, toggleFavorite } = useMarket();
-    const { timeframe } = useTimeframe();
-    const { formatPrice, formatLargeNumber } = useCurrency();
-    const [sortField, setSortField] = useState<SortField>('rank');
-    const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-
-    const handleSort = (field: SortField) => {
-        if (sortField === field) {
-            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-        } else {
-            setSortField(field);
-            setSortDirection(field === 'rank' ? 'asc' : 'desc');
-        }
-    };
-
-    const sortedCryptos = [...filteredCryptos].sort((a, b) => {
-        const direction = sortDirection === 'asc' ? 1 : -1;
-        switch (sortField) {
-            case 'rank':
-                return (a.rank - b.rank) * direction;
-            case 'name':
-                return a.name.localeCompare(b.name) * direction;
-            case 'price':
-                return (a.price - b.price) * direction;
-            case 'change':
-                return (getChangeByTimeframe(a, timeframe) - getChangeByTimeframe(b, timeframe)) * direction;
-            case 'marketCap':
-                return (a.marketCap - b.marketCap) * direction;
-            case 'volume24h':
-                return (a.volume24h - b.volume24h) * direction;
-            default:
-                return 0;
-        }
-    });
-
-    // Get the label for the timeframe column
-    const getTimeframeLabel = () => {
-        switch (timeframe) {
-            case '1h': return '1s';
-            case '24h': return '24s';
-            case '7d': return '7g';
-            case '30d': return '30g';
-            case '1y': return '1y';
-            default: return '24s';
-        }
-    };
-
-
-    return (
-        <>
-            {/* Mobile View */}
-            <div className="md:hidden space-y-3">
-                {sortedCryptos.map((crypto) => (
-                    <Link key={crypto.id} to={`/coin/${crypto.id}`}>
-                        <CryptoCard
-                            crypto={crypto}
-                            isFavorite={favorites.includes(crypto.id)}
-                            onToggleFavorite={() => toggleFavorite(crypto.id)}
-                            changeValue={getChangeByTimeframe(crypto, timeframe)}
-                            formattedPrice={formatPrice(crypto.price)}
-                            formattedMarketCap={formatLargeNumber(crypto.marketCap)}
-                            formattedVolume={formatLargeNumber(crypto.volume24h)}
-                        />
-                    </Link>
-                ))}
-            </div>
-
-            {/* Desktop View */}
-            <div className="hidden md:block overflow-x-auto rounded-xl border border-border bg-bg-card/50">
-                <table className="crypto-table">
+        <div className="w-full bg-surface-card/50 backdrop-blur-sm rounded-xl border border-white/5 overflow-hidden shadow-lg">
+            <div className="overflow-x-auto">
+                <table className="w-full">
                     <thead>
-                        <tr>
-                            <th className="w-12"></th>
-                            <SortHeader
-                                label="#"
-                                field="rank"
-                                currentSort={sortField}
-                                currentDirection={sortDirection}
-                                onSort={handleSort}
-                                className="w-12"
-                            />
-                            <SortHeader
-                                label="İsim"
-                                field="name"
-                                currentSort={sortField}
-                                currentDirection={sortDirection}
-                                onSort={handleSort}
-                            />
-                            <SortHeader
-                                label="Fiyat"
-                                field="price"
-                                currentSort={sortField}
-                                currentDirection={sortDirection}
-                                onSort={handleSort}
-                                className="text-right"
-                            />
-                            <SortHeader
-                                label={`Değişim (${getTimeframeLabel()})`}
-                                field="change"
-                                currentSort={sortField}
-                                currentDirection={sortDirection}
-                                onSort={handleSort}
-                                className="text-right"
-                            />
-                            <SortHeader
-                                label="Piyasa Değeri"
-                                field="marketCap"
-                                currentSort={sortField}
-                                currentDirection={sortDirection}
-                                onSort={handleSort}
-                                className="text-right"
-                            />
-                            <SortHeader
-                                label="Hacim (24s)"
-                                field="volume24h"
-                                currentSort={sortField}
-                                currentDirection={sortDirection}
-                                onSort={handleSort}
-                                className="text-right"
-                            />
-                            <th className="text-right">Son 7 Gün</th>
+                        <tr className="border-b border-white/5 bg-white/5">
+                            <th className="px-4 py-4 text-left text-xs font-semibold text-text-muted uppercase tracking-wider w-12">#</th>
+                            <th className="px-4 py-4 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Kripto Para</th>
+                            <th className="px-4 py-4 text-right text-xs font-semibold text-text-muted uppercase tracking-wider">Fiyat</th>
+                            <th className="px-4 py-4 text-right text-xs font-semibold text-text-muted uppercase tracking-wider hidden sm:table-cell">24s %</th>
+                            <th className="px-4 py-4 text-right text-xs font-semibold text-text-muted uppercase tracking-wider hidden md:table-cell">7g %</th>
+                            <th className="px-4 py-4 text-right text-xs font-semibold text-text-muted uppercase tracking-wider hidden lg:table-cell">Piyasa Değeri</th>
+                            <th className="px-4 py-4 text-right text-xs font-semibold text-text-muted uppercase tracking-wider hidden xl:table-cell">Hacim (24s)</th>
+                            <th className="px-4 py-4 text-right text-xs font-semibold text-text-muted uppercase tracking-wider hidden lg:table-cell w-32">Son 7 Gün</th>
+                            <th className="px-4 py-4 text-center text-xs font-semibold text-text-muted uppercase tracking-wider w-12">Favori</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {sortedCryptos.map((crypto, index) => {
-                            const isFavorite = favorites.includes(crypto.id);
-
-                            return (
+                    <tbody className="divide-y divide-white/5">
+                        <AnimatePresence>
+                            {cryptosToDisplay.map((coin) => (
                                 <motion.tr
-                                    key={crypto.id}
+                                    key={coin.id}
+                                    layoutId={coin.id}
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    transition={{ delay: index * 0.02 }}
+                                    exit={{ opacity: 0 }}
+                                    className="hover:bg-white/5 transition-colors cursor-pointer group"
+                                    onClick={() => navigate(`/coin/${coin.id}`)}
                                 >
-                                    <td>
-                                        <button
-                                            onClick={() => toggleFavorite(crypto.id)}
-                                            className="p-1 hover:scale-110 transition-transform"
-                                        >
-                                            <Star
-                                                className={`w-4 h-4 ${isFavorite
-                                                    ? 'fill-accent-gold text-accent-gold'
-                                                    : 'text-text-muted hover:text-accent-gold'
-                                                    }`}
-                                            />
-                                        </button>
+                                    <td className="px-4 py-4 text-sm text-text-muted">
+                                        {coin.market_cap_rank}
                                     </td>
-                                    <td className="text-text-muted">{crypto.rank}</td>
-                                    <td>
-                                        <Link
-                                            to={`/coin/${crypto.id}`}
-                                            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-                                        >
+                                    <td className="px-4 py-4">
+                                        <div className="flex items-center gap-3">
                                             <img
-                                                src={crypto.image}
-                                                alt={crypto.name}
+                                                src={coin.image}
+                                                alt={coin.name}
                                                 className="w-8 h-8 rounded-full"
+                                                loading="lazy"
                                             />
-                                            <div>
-                                                <p className="font-medium text-text-primary">{crypto.name}</p>
-                                                <p className="text-sm text-text-muted">{crypto.symbol}</p>
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-semibold text-text-primary group-hover:text-primary transition-colors">
+                                                    {coin.name}
+                                                </span>
+                                                <span className="text-xs text-text-muted uppercase">
+                                                    {coin.symbol}
+                                                </span>
                                             </div>
-                                        </Link>
+                                        </div>
                                     </td>
-                                    <td className="text-right font-medium text-text-primary">
-                                        {formatPrice(crypto.price)}
+                                    <td className="px-4 py-4 text-right whitespace-nowrap">
+                                        <div className="text-sm font-medium text-text-primary">
+                                            {formatPrice(coin.current_price)}
+                                        </div>
                                     </td>
-                                    <td className="text-right">
-                                        <ChangeCell value={getChangeByTimeframe(crypto, timeframe)} />
+                                    <td className="px-4 py-4 text-right whitespace-nowrap hidden sm:table-cell">
+                                        <div className={`text-sm font-medium flex items-center justify-end gap-1 ${coin.price_change_percentage_24h >= 0 ? 'text-green-500' : 'text-red-500'
+                                            }`}>
+                                            {coin.price_change_percentage_24h >= 0 ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
+                                            {Math.abs(coin.price_change_percentage_24h).toFixed(2)}%
+                                        </div>
                                     </td>
-                                    <td className="text-right text-text-secondary">
-                                        {formatLargeNumber(crypto.marketCap)}
+                                    <td className="px-4 py-4 text-right whitespace-nowrap hidden md:table-cell">
+                                        <div className={`text-sm font-medium ${coin.price_change_percentage_7d_in_currency >= 0 ? 'text-green-500' : 'text-red-500'
+                                            }`}>
+                                            {coin.price_change_percentage_7d_in_currency?.toFixed(2)}%
+                                        </div>
                                     </td>
-                                    <td className="text-right text-text-secondary">
-                                        {formatLargeNumber(crypto.volume24h)}
+                                    <td className="px-4 py-4 text-right whitespace-nowrap hidden lg:table-cell text-sm text-text-primary">
+                                        {formatLargeNumber(coin.market_cap)}
                                     </td>
-                                    <td className="text-right">
-                                        <div className="flex justify-end">
+                                    <td className="px-4 py-4 text-right whitespace-nowrap hidden xl:table-cell text-sm text-text-primary">
+                                        {formatLargeNumber(coin.total_volume)}
+                                    </td>
+                                    <td className="px-4 py-4 hidden lg:table-cell">
+                                        <div className="h-10 w-32 ml-auto">
                                             <Sparkline
-                                                data={crypto.sparkline}
-                                                positive={crypto.change7d >= 0}
+                                                data={coin.sparkline_in_7d?.price || []}
+                                                color={coin.price_change_percentage_7d_in_currency >= 0 ? '#22c55e' : '#ef4444'}
                                             />
                                         </div>
                                     </td>
+                                    <td className="px-4 py-4 text-center">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleFavorite(coin.id);
+                                            }}
+                                            className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                                        >
+                                            <Star
+                                                size={18}
+                                                className={`${favorites.includes(coin.id) ? 'fill-yellow-500 text-yellow-500' : 'text-text-muted'}`}
+                                            />
+                                        </button>
+                                    </td>
                                 </motion.tr>
-                            );
-                        })}
+                            ))}
+                        </AnimatePresence>
                     </tbody>
                 </table>
             </div>
-        </>
+
+            {cryptosToDisplay.length === 0 && !loading && (
+                <div className="p-12 text-center text-text-muted">
+                    Aradığınız kriterlere uygun sonuç bulunamadı.
+                </div>
+            )}
+        </div>
     );
-}
+};

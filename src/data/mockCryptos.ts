@@ -16,6 +16,7 @@ export interface Crypto {
     circulatingSupply: number;
     sparkline: number[];
     category: string[];
+    description?: string; // New field for SEO summary
 }
 
 // Helper to get change by timeframe
@@ -40,9 +41,6 @@ export interface GlobalStats {
     marketCapChange24h: number;
 }
 
-// Turkish Lira exchange rate (approximate) - for API integration
-// const TRY_RATE = 35.5;
-
 // Generate realistic sparkline data
 const generateSparkline = (basePrice: number, volatility: number = 0.05): number[] => {
     const points = 24;
@@ -57,17 +55,80 @@ const generateSparkline = (basePrice: number, volatility: number = 0.05): number
     return data;
 };
 
-export const globalStats: GlobalStats = {
-    totalMarketCap: 134.19 * 1e12, // ₺134.19T
-    totalVolume24h: 4.72 * 1e12, // ₺4.72T
-    btcDominance: 58.43,
-    ethDominance: 12.09,
-    activeCryptos: 15234,
-    markets: 1124,
-    marketCapChange24h: 0.35,
+// Generate history for different timeframes
+export const generateHistory = (basePrice: number, timeframe: '1h' | '24h' | '7d' | '30d' | '3m'): number[] => {
+    let points = 24;
+    let volatility = 0.02;
+
+    switch (timeframe) {
+        case '1h': points = 60; volatility = 0.005; break;
+        case '7d': points = 7 * 24; volatility = 0.1; break;
+        case '30d': points = 30; volatility = 0.2; break;
+        case '3m': points = 90; volatility = 0.4; break;
+        default: break; // 24h default
+    }
+
+    const data: number[] = [];
+    let currentPrice = basePrice * (1 - volatility / 2); // Start slightly lower/higher
+
+    for (let i = 0; i < points; i++) {
+        const change = (Math.random() - 0.5) * 2 * volatility * (basePrice / points);
+        currentPrice += change;
+        // Keep price positive
+        currentPrice = Math.max(0.000001, currentPrice);
+        data.push(currentPrice);
+    }
+
+    // Ensure the last point is close to the actual current price for realism
+    data[data.length - 1] = basePrice;
+
+    return data;
 };
 
-export const mockCryptos: Crypto[] = [
+// --- DATA GENERATOR FOR LONG TAIL COINS ---
+
+const coinSuffixes = ['Coin', 'Token', 'Protocol', 'Chain', 'Swap', 'DAO', 'Finance', 'Network', 'Verse', 'AI'];
+const coinPrefixes = ['Safe', 'Ultra', 'Mega', 'Hyper', 'Nova', 'Cyber', 'Deep', 'Meta', 'Quantum', 'Stellar'];
+const coinCategories = ['defi', 'layer-1', 'layer-2', 'meme', 'ai', 'gaming', 'storage', 'nft'];
+
+function generateRandomCoin(rank: number): Crypto {
+    const prefix = coinPrefixes[Math.floor(Math.random() * coinPrefixes.length)];
+    const suffix = coinSuffixes[Math.floor(Math.random() * coinSuffixes.length)];
+    const name = `${prefix}${suffix}`;
+    const symbol = `${prefix[0]}${suffix.substring(0, 3)}`.toUpperCase();
+
+    // Decrease price and market cap as rank increases
+    const basePrice = Math.max(0.01, 1000 / rank + (Math.random() * 50));
+    const marketCap = Math.max(1_000_000, 10_000_000_000 - (rank * 30_000_000));
+
+    // Assign random category
+    const mainCategory = coinCategories[Math.floor(Math.random() * coinCategories.length)];
+    const categories = [mainCategory];
+    if (Math.random() > 0.7) categories.push('smart-contracts');
+
+    return {
+        id: `${name.toLowerCase()}-${rank}`,
+        rank,
+        name,
+        symbol,
+        image: `https://ui-avatars.com/api/?name=${symbol}&background=random&color=fff&rounded=true&bold=true`,
+        price: basePrice,
+        change1h: (Math.random() - 0.5) * 5,
+        change24h: (Math.random() - 0.5) * 15,
+        change7d: (Math.random() - 0.5) * 30,
+        change30d: (Math.random() - 0.5) * 50,
+        change1y: (Math.random() - 0.5) * 100,
+        marketCap,
+        volume24h: marketCap * (0.05 + Math.random() * 0.1),
+        circulatingSupply: marketCap / basePrice,
+        sparkline: generateSparkline(basePrice, 0.1),
+        category: categories,
+        description: `This is a generated description for ${name}.`
+    };
+}
+
+// Top 20 Manual Data (High Quality)
+export const top20Cryptos: Crypto[] = [
     {
         id: 'bitcoin',
         rank: 1,
@@ -429,6 +490,22 @@ export const mockCryptos: Crypto[] = [
         category: ['layer-1', 'smart-contracts', 'move'],
     },
 ];
+
+// Generate the remaining 280 coins
+const generatedCoins = Array.from({ length: 280 }, (_, i) => generateRandomCoin(i + 21));
+
+// Combine manual and generated data
+export const mockCryptos: Crypto[] = [...top20Cryptos, ...generatedCoins];
+
+export const globalStats: GlobalStats = {
+    totalMarketCap: 134.19 * 1e12, // ₺134.19T
+    totalVolume24h: 4.72 * 1e12, // ₺4.72T
+    btcDominance: 58.43,
+    ethDominance: 12.09,
+    activeCryptos: mockCryptos.length,
+    markets: 1124,
+    marketCapChange24h: 0.35,
+};
 
 // Trending coins (top performers)
 export const trendingCoins = mockCryptos

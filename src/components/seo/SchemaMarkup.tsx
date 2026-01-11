@@ -14,30 +14,46 @@ interface SchemaMarkupProps {
 }
 
 export function SchemaMarkup({ type, data, faqs, breadcrumbs, organizationData }: SchemaMarkupProps) {
-    const generateCoinSchema = (coin: Crypto) => ({
-        '@context': 'https://schema.org',
-        '@type': 'Product',
-        name: coin.name,
-        description: `${coin.name} (${coin.symbol}) canlı fiyatı, piyasa değeri ve 24 saatlik işlem hacmi. Türkiye'nin en güncel kripto para takip platformu.`,
-        image: coin.image,
-        sku: coin.symbol,
-        brand: {
-            '@type': 'Brand',
+    const generateCoinSchema = (coin: Crypto) => {
+        // Determine specific schema type based on category
+        let schemaType = 'FinancialProduct'; // Default for generic financial asset
+        let additionalType = 'Currency'; // Default additional type
+
+        if (coin.category.includes('layer-1') || coin.category.includes('layer-0')) {
+            schemaType = 'SoftwareApplication'; // Blockchain network
+            additionalType = 'Cryptocurrency';
+        } else if (coin.category.includes('defi')) {
+            schemaType = 'FinancialProduct'; // DeFi product
+            additionalType = 'DecentralizedFinance';
+        }
+
+        return {
+            '@context': 'https://schema.org',
+            '@type': schemaType,
+            additionalType: `https://schema.org/${additionalType}`,
             name: coin.name,
-        },
-        offers: {
-            '@type': 'Offer',
-            price: coin.price,
-            priceCurrency: 'TRY',
-            availability: 'https://schema.org/InStock',
-            url: `https://kripto-paralar.com/coin/${coin.id}`,
-        },
-        aggregateRating: {
-            '@type': 'AggregateRating',
-            ratingValue: '4.5',
-            reviewCount: Math.floor(coin.volume24h / 1000000),
-        },
-    });
+            description: `${coin.name} (${coin.symbol}) canlı fiyatı, piyasa değeri ve 24 saatlik işlem hacmi. Türkiye'nin en güncel kripto para takip platformu.`,
+            image: coin.image,
+            sku: coin.symbol,
+            brand: {
+                '@type': 'Brand',
+                name: coin.name,
+            },
+            offers: {
+                '@type': 'Offer',
+                price: coin.price,
+                priceCurrency: 'TRY',
+                availability: 'https://schema.org/InStock',
+                url: `https://kripto-paralar.com/coin/${coin.id}`,
+                priceValidUntil: new Date(Date.now() + 86400000).toISOString(), // Valid for 24h
+            },
+            aggregateRating: {
+                '@type': 'AggregateRating',
+                ratingValue: '4.5',
+                reviewCount: Math.floor(coin.volume24h / 1000000) || 10,
+            },
+        };
+    };
 
     const generateFAQSchema = (faqList: { question: string; answer: string }[]) => ({
         '@context': 'https://schema.org',

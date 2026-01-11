@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Shield, AlertTriangle } from 'lucide-react';
 import { FooterAd } from '../ads/AdSlot';
 
-export function Footer() {
+export function Footer({ showAd = true }: { showAd?: boolean }) {
     const currentYear = new Date().getFullYear();
 
     return (
@@ -10,9 +10,11 @@ export function Footer() {
             <div className="container px-4 mx-auto space-y-8">
 
                 {/* AdSlot Integration */}
-                <div className="flex justify-center mb-8">
-                    <FooterAd />
-                </div>
+                {showAd && (
+                    <div className="flex justify-center mb-8">
+                        <FooterAd />
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                     {/* Brand & Description */}

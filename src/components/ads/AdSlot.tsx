@@ -37,7 +37,7 @@ export function AdSlot({ slotId, size = 'responsive', className = '' }: AdSlotPr
     return (
         <div
             ref={adRef}
-            className={`ad-slot flex items-center justify-center bg-bg-tertiary/30 border border-border/20 rounded-lg overflow-hidden ${className}`}
+            className={`ad-slot relative flex items-center justify-center bg-bg-tertiary/30 border border-border/20 rounded-lg overflow-hidden ${className}`}
             style={{
                 minHeight: size === 'responsive' ? '100px' : dimensions.height,
                 maxWidth: dimensions.width,

@@ -74,6 +74,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
 
     // Convert price from TRY to target currency
     const convertFromTRY = (priceInTRY: number): number => {
+        if (priceInTRY === undefined || priceInTRY === null || isNaN(priceInTRY)) return 0;
         if (currency === 'TRY') return priceInTRY;
         // First convert TRY to USD, then to target currency
         const priceInUSD = priceInTRY / rates.TRY;
@@ -82,11 +83,17 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
 
     // Format price with currency symbol
     const formatPrice = (priceInTRY: number): string => {
+        if (priceInTRY === undefined || priceInTRY === null || isNaN(priceInTRY)) return `${currencyOption.symbol}0.00`;
+
+        // Handle extremely small numbers (like Pepe, Shib)
+        // If price is 0 (or close to it) from conversion logic but input was valid, show high precision
         const converted = convertFromTRY(priceInTRY);
         const symbol = currencyOption.symbol;
 
         let formatted: string;
-        if (converted >= 1000) {
+        if (converted === 0) {
+            formatted = "0.00";
+        } else if (converted >= 1000) {
             formatted = new Intl.NumberFormat(currency === 'TRY' ? 'tr-TR' : 'en-US', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
@@ -94,7 +101,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         } else {
             formatted = new Intl.NumberFormat(currency === 'TRY' ? 'tr-TR' : 'en-US', {
                 minimumFractionDigits: 2,
-                maximumFractionDigits: converted < 1 ? 6 : 2,
+                maximumFractionDigits: converted < 1 ? 6 : 2, // 6 decimal places for small coins
             }).format(converted);
         }
 
@@ -103,6 +110,8 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
 
     // Format large numbers (market cap, volume) with suffix
     const formatLargeNumber = (numInTRY: number): string => {
+        if (numInTRY === undefined || numInTRY === null || isNaN(numInTRY)) return `${currencyOption.symbol}0`;
+
         const converted = convertFromTRY(numInTRY);
         const symbol = currencyOption.symbol;
 
