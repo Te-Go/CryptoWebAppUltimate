@@ -13,6 +13,7 @@ import { SchemaMarkup } from '../components/seo/SchemaMarkup';
 import { PeopleAlsoAsk } from '../components/seo/PeopleAlsoAsk';
 import { HeaderAd, InContentAd } from '../components/ads/AdSlot';
 import { CryptoConverter } from '../components/tools/CryptoConverter';
+import { TimeMachineCalculator } from '../components/tools/TimeMachineCalculator';
 import { CoinLayoutFactory } from '../components/coin/CoinLayoutFactory';
 import { CoinComparison } from '../components/coin/CoinComparison';
 import { getSmartSummary, getSmartFAQs } from '../components/seo/SmartContentEngine';
@@ -52,6 +53,21 @@ export function CoinDetailPage() {
             price,
         }));
     }, [coin, timeframe]);
+
+    // Calculate Y-axis domain with 10% padding
+    const yAxisDomain = useMemo(() => {
+        if (!chartData.length) return ['auto', 'auto'];
+        const prices = chartData.map(d => d.price);
+        const min = Math.min(...prices);
+        const max = Math.max(...prices);
+        const range = max - min;
+
+        // If no variation (flat line), add small buffer
+        if (range === 0) return [min * 0.99, max * 1.01];
+
+        const padding = range * 0.10; // 10% of the range
+        return [min - padding, max + padding];
+    }, [chartData]);
 
     if (!coin) {
         return (
@@ -177,40 +193,7 @@ export function CoinDetailPage() {
                     </div>
                 </GlassCard>
 
-                {/* Dynamic Archetype Modules (Layer 1, DeFi, etc.) */}
-                <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                    <CoinLayoutFactory coin={coin} />
-                </div>
-
-                {/* Smart Comparison Module (SEO Context Anchor) */}
-                <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                    <CoinComparison coin={coin} />
-                </div>
-
-                {/* Smart Summary - Replacing Static Text */}
-                <GlassCard className="p-6" hover={false}>
-                    <h2 className="text-lg font-semibold text-text-primary mb-4 font-display">
-                        {coin.name} Nedir? Güncel Analiz
-                    </h2>
-                    <p className="text-text-secondary leading-relaxed">
-                        {summary}
-                    </p>
-                    <div className="flex flex-wrap gap-2 mt-4">
-                        {coin.category.map((cat) => (
-                            <span
-                                key={cat}
-                                className="px-3 py-1 bg-bg-tertiary text-text-secondary text-sm rounded-full capitalize"
-                            >
-                                {cat.replace('-', ' ')}
-                            </span>
-                        ))}
-                    </div>
-                </GlassCard>
-
-                {/* Community Sentiment */}
-                <SentimentVote coinId={coin.id} />
-
-                {/* Price Chart */}
+                {/* Price Chart - Moved to 2nd position */}
                 <GlassCard className="p-6" hover={false}>
                     <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
                         <h2 className="text-lg font-semibold text-text-primary font-display">
@@ -256,8 +239,17 @@ export function CoinDetailPage() {
                                     interval={Math.floor(chartData.length / 6)}
                                 />
                                 <YAxis
-                                    hide
-                                    domain={['auto', 'auto']}
+                                    domain={yAxisDomain}
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fill: '#8B9AAB', fontSize: 10 }}
+                                    tickFormatter={(value) => {
+                                        // Short format for Y-axis (e.g. 3.4M) to avoid clutter
+                                        if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+                                        if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
+                                        return value.toFixed(2);
+                                    }}
+                                    width={40}
                                 />
                                 <Tooltip
                                     contentStyle={{
@@ -280,6 +272,47 @@ export function CoinDetailPage() {
                         </ResponsiveContainer>
                     </div>
                 </GlassCard>
+
+                {/* Dynamic Archetype Modules (Layer 1, DeFi, etc.) */}
+                <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+                    <CoinLayoutFactory coin={coin} />
+                </div>
+
+                {/* Smart Comparison Module (SEO Context Anchor) */}
+                <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                    <CoinComparison coin={coin} />
+                </div>
+
+                {/* Tools Grid (Converter & Time Machine) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                    <CryptoConverter />
+                    <TimeMachineCalculator />
+                </div>
+
+                {/* Smart Summary - Replacing Static Text */}
+                <GlassCard className="p-6" hover={false}>
+                    <h2 className="text-lg font-semibold text-text-primary mb-4 font-display">
+                        {coin.name} Nedir? Güncel Analiz
+                    </h2>
+                    <p className="text-text-secondary leading-relaxed">
+                        {summary}
+                    </p>
+                    <div className="flex flex-wrap gap-2 mt-4">
+                        {coin.category.map((cat) => (
+                            <span
+                                key={cat}
+                                className="px-3 py-1 bg-bg-tertiary text-text-secondary text-sm rounded-full capitalize"
+                            >
+                                {cat.replace('-', ' ')}
+                            </span>
+                        ))}
+                    </div>
+                </GlassCard>
+
+                {/* Community Sentiment */}
+                <SentimentVote coinId={coin.id} />
+
+                {/* Price Chart Moved Up */}
 
                 {/* Latest News & Comments */}
                 <LatestNews className="py-2" />
@@ -319,8 +352,7 @@ export function CoinDetailPage() {
                     </GlassCard>
                 </div>
 
-                {/* Crypto Converter */}
-                <CryptoConverter />
+
 
                 {/* Smart FAQ */}
                 <PeopleAlsoAsk

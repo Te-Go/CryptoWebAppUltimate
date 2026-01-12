@@ -3,6 +3,7 @@ import { LineChart, Line, ResponsiveContainer } from 'recharts';
 interface SparklineProps {
     data: number[];
     positive?: boolean;
+    color?: string;
     width?: number;
     height?: number;
 }
@@ -10,13 +11,14 @@ interface SparklineProps {
 export function Sparkline({
     data,
     positive = true,
+    color: colorProp,
     width = 100,
     height = 32
 }: SparklineProps) {
     if (!data || !Array.isArray(data) || data.length === 0) return null;
 
     const chartData = data.map((value, index) => ({ index, value }));
-    const color = positive ? '#00FF88' : '#FF3366';
+    const color = colorProp ?? (positive ? '#00FF88' : '#FF3366');
 
     return (
         <ResponsiveContainer width={width} height={height}>

@@ -17,6 +17,19 @@ export interface Crypto {
     sparkline: number[];
     category: string[];
     description?: string; // New field for SEO summary
+    socials?: {
+        website?: string;
+        twitter?: string;
+    };
+    // Archetype Specific Data
+    tvl?: number; // For DeFi
+    apy?: number; // For DeFi
+    maxSupply?: number; // For Sovereign/Store of Value
+    hashrate?: string; // For PoW
+    dominance?: number; // For Leaders
+    sentimentScore?: number; // 0-100 for Memes
+    whaleActivity?: number; // Large tx count for Memes
+    developerActivity?: number; // Commits for Utility
 }
 
 // Helper to get change by timeframe
@@ -106,6 +119,24 @@ function generateRandomCoin(rank: number): Crypto {
     const categories = [mainCategory];
     if (Math.random() > 0.7) categories.push('smart-contracts');
 
+    // Generate Archetype Data based on category
+    const archetypeData: Partial<Crypto> = {};
+
+    if (categories.includes('defi')) {
+        archetypeData.tvl = marketCap * (0.1 + Math.random() * 0.4); // 10-50% of MCAP
+        archetypeData.apy = 2 + Math.random() * 20; // 2-22%
+    }
+
+    if (categories.includes('meme')) {
+        archetypeData.sentimentScore = 40 + Math.floor(Math.random() * 60); // 40-100
+        archetypeData.whaleActivity = 50 + Math.floor(Math.random() * 5000);
+    }
+
+    if (categories.includes('layer-1') || categories.includes('pow')) {
+        archetypeData.hashrate = `${Math.floor(Math.random() * 500)} EH/s`;
+        archetypeData.developerActivity = 100 + Math.floor(Math.random() * 2000);
+    }
+
     return {
         id: `${name.toLowerCase()}-${rank}`,
         rank,
@@ -123,7 +154,8 @@ function generateRandomCoin(rank: number): Crypto {
         circulatingSupply: marketCap / basePrice,
         sparkline: generateSparkline(basePrice, 0.1),
         category: categories,
-        description: `This is a generated description for ${name}.`
+        description: `This is a generated description for ${name}.`,
+        ...archetypeData
     };
 }
 
@@ -146,14 +178,23 @@ export const top20Cryptos: Crypto[] = [
         circulatingSupply: 19_850_000,
         sparkline: generateSparkline(3_927_500),
         category: ['layer-1', 'pow'],
+        description: 'Bitcoin (BTC), Satoshi Nakamoto tarafından oluşturulan ve merkeziyetsiz bir yapıya sahip olan ilk kripto para birimidir. Dijital altın olarak da bilinir.',
+        socials: {
+            website: 'https://bitcoin.org',
+            twitter: 'https://twitter.com/bitcoin'
+        },
+        // Sovereign Archetype
+        maxSupply: 21_000_000,
+        hashrate: '650 EH/s',
+        dominance: 58.4,
     },
     {
         id: 'ethereum',
         rank: 2,
         name: 'Ethereum',
         symbol: 'ETH',
-        image: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
-        price: 134_515, // ~$3,790 * 35.5
+        image: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
+        price: 134_515,
         change1h: -0.08,
         change24h: 1.87,
         change7d: 4.52,
@@ -164,6 +205,14 @@ export const top20Cryptos: Crypto[] = [
         circulatingSupply: 120_450_000,
         sparkline: generateSparkline(134_515),
         category: ['layer-1', 'smart-contracts', 'defi'],
+        socials: {
+            website: 'https://ethereum.org',
+            twitter: 'https://twitter.com/ethereum'
+        },
+        // Bank/Sovereign Hybrid
+        tvl: 65_000_000_000, // $65B
+        apy: 3.4, // Staking APY
+        developerActivity: 9850, // Weekly commits
     },
     {
         id: 'tether',
@@ -182,6 +231,7 @@ export const top20Cryptos: Crypto[] = [
         circulatingSupply: 143_000_000_000,
         sparkline: generateSparkline(35.52, 0.001),
         category: ['stablecoin'],
+        tvl: 143_000_000_000,
     },
     {
         id: 'xrp',
@@ -200,6 +250,7 @@ export const top20Cryptos: Crypto[] = [
         circulatingSupply: 57_600_000_000,
         sparkline: generateSparkline(96.87, 0.08),
         category: ['layer-1', 'payments'],
+        maxSupply: 100_000_000_000,
     },
     {
         id: 'bnb',
@@ -218,6 +269,7 @@ export const top20Cryptos: Crypto[] = [
         circulatingSupply: 145_000_000,
         sparkline: generateSparkline(36_725),
         category: ['layer-1', 'exchange-token', 'bnb-chain'],
+        tvl: 4_500_000_000,
     },
     {
         id: 'solana',
@@ -236,6 +288,10 @@ export const top20Cryptos: Crypto[] = [
         circulatingSupply: 472_000_000,
         sparkline: generateSparkline(7_207, 0.07),
         category: ['layer-1', 'smart-contracts', 'solana-ecosystem'],
+        // Sovereign/Utility Hybrid
+        tvl: 8_200_000_000,
+        developerActivity: 4500,
+        sentimentScore: 88,
     },
     {
         id: 'usdc',
@@ -272,6 +328,9 @@ export const top20Cryptos: Crypto[] = [
         circulatingSupply: 147_000_000_000,
         sparkline: generateSparkline(12.78, 0.12),
         category: ['meme', 'pow'],
+        // Viral Archetype
+        sentimentScore: 94,
+        whaleActivity: 1250, // High whale activity
     },
     {
         id: 'cardano',
@@ -290,6 +349,8 @@ export const top20Cryptos: Crypto[] = [
         circulatingSupply: 35_500_000_000,
         sparkline: generateSparkline(38.24, 0.06),
         category: ['layer-1', 'smart-contracts', 'pos'],
+        developerActivity: 12000, // Very high
+        maxSupply: 45_000_000_000,
     },
     {
         id: 'tron',
@@ -308,6 +369,7 @@ export const top20Cryptos: Crypto[] = [
         circulatingSupply: 86_200_000_000,
         sparkline: generateSparkline(9.23),
         category: ['layer-1', 'smart-contracts'],
+        tvl: 8_500_000_000,
     },
     {
         id: 'chainlink',
@@ -326,6 +388,9 @@ export const top20Cryptos: Crypto[] = [
         circulatingSupply: 626_000_000,
         sparkline: generateSparkline(894.25, 0.07),
         category: ['oracle', 'defi'],
+        // Utility Archetype
+        developerActivity: 750,
+        tvl: 0, // Oracles secure TVL but don't hold it same way
     },
     {
         id: 'avalanche',
@@ -344,6 +409,8 @@ export const top20Cryptos: Crypto[] = [
         circulatingSupply: 412_000_000,
         sparkline: generateSparkline(1_456.78, 0.08),
         category: ['layer-1', 'smart-contracts', 'defi'],
+        tvl: 1_200_000_000,
+        maxSupply: 720_000_000,
     },
     {
         id: 'polkadot',
@@ -362,6 +429,7 @@ export const top20Cryptos: Crypto[] = [
         circulatingSupply: 1_450_000_000,
         sparkline: generateSparkline(284.56, 0.06),
         category: ['layer-0', 'smart-contracts'],
+        developerActivity: 11500,
     },
     {
         id: 'shiba-inu',
@@ -380,6 +448,9 @@ export const top20Cryptos: Crypto[] = [
         circulatingSupply: 589_000_000_000_000,
         sparkline: generateSparkline(0.000887, 0.15),
         category: ['meme', 'ethereum-ecosystem'],
+        // Viral
+        sentimentScore: 91,
+        whaleActivity: 850,
     },
     {
         id: 'polygon',
@@ -398,6 +469,7 @@ export const top20Cryptos: Crypto[] = [
         circulatingSupply: 10_000_000_000,
         sparkline: generateSparkline(17.82, 0.06),
         category: ['layer-2', 'smart-contracts', 'scaling'],
+        tvl: 950_000_000,
     },
     {
         id: 'litecoin',
@@ -416,6 +488,8 @@ export const top20Cryptos: Crypto[] = [
         circulatingSupply: 75_000_000,
         sparkline: generateSparkline(4_123.45),
         category: ['layer-1', 'pow', 'payments'],
+        maxSupply: 84_000_000,
+        hashrate: '1.2 PH/s',
     },
     {
         id: 'uniswap',
@@ -434,6 +508,9 @@ export const top20Cryptos: Crypto[] = [
         circulatingSupply: 1_000_000_000,
         sparkline: generateSparkline(532.18, 0.07),
         category: ['defi', 'dex', 'ethereum-ecosystem'],
+        // Bank Archetype
+        tvl: 5_500_000_000,
+        apy: 12.5, // Liquidity APY estimate
     },
     {
         id: 'near',
@@ -452,6 +529,7 @@ export const top20Cryptos: Crypto[] = [
         circulatingSupply: 1_200_000_000,
         sparkline: generateSparkline(213.45, 0.08),
         category: ['layer-1', 'smart-contracts', 'ai'],
+        tvl: 450_000_000,
     },
     {
         id: 'pepe',
@@ -470,6 +548,8 @@ export const top20Cryptos: Crypto[] = [
         circulatingSupply: 420_690_000_000_000,
         sparkline: generateSparkline(0.000711, 0.2),
         category: ['meme', 'ethereum-ecosystem'],
+        sentimentScore: 98,
+        whaleActivity: 4500,
     },
     {
         id: 'sui',
@@ -488,6 +568,7 @@ export const top20Cryptos: Crypto[] = [
         circulatingSupply: 2_800_000_000,
         sparkline: generateSparkline(156.78, 0.1),
         category: ['layer-1', 'smart-contracts', 'move'],
+        tvl: 650_000_000,
     },
 ];
 

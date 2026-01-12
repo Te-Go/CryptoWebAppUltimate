@@ -59,6 +59,21 @@ const exchanges: Exchange[] = [
     },
 ];
 
+const faqs = [
+    {
+        question: "Türkiye'deki kripto borsaları güvenilir mi?",
+        answer: "Listelediğimiz borsalar (Binance TR, Paribu, BtcTurk) Türkiye'de yasal olarak faaliyet gösteren, MASAK (Mali Suçları Araştırma Kurulu) yükümlülüklerine uyan ve milyonlarca kullanıcısı olan köklü platformlardır. Ancak her zaman varlıklarınızın bir kısmını soğuk cüzdanlarda tutmanız önerilir."
+    },
+    {
+        question: "En düşük komisyon hangi borsada?",
+        answer: "Şu anda Binance TR %0.10 (binde 1) işlem ücreti ile en düşük standart komisyonu sunmaktadır. BNB kullanarak bu oranı %0.075'e kadar düşürebilirsiniz."
+    },
+    {
+        question: "Banka hesabından nasıl para yatırılır?",
+        answer: "Tüm bu borsalar Türk bankalarıyla entegredir. Ziraat, Vakıfbank, Akbank gibi anlaşmalı bankalardan 7/24 Havale yapabilir, diğer tüm bankalardan ise FAST (50.000 TL'ye kadar) ile anında veya EFT saatlerinde para yatırabilirsiniz."
+    }
+];
+
 export function ExchangesPage() {
     return (
         <div className="min-h-screen bg-bg-primary pb-20 lg:pb-0">
@@ -75,6 +90,11 @@ export function ExchangesPage() {
                     { name: 'Ana Sayfa', url: '/' },
                     { name: 'Borsalar', url: '/borsalar' }
                 ]}
+            />
+
+            <SchemaMarkup
+                type="faq"
+                faqs={faqs}
             />
 
             <Header />
@@ -187,6 +207,49 @@ export function ExchangesPage() {
                         </table>
                     </div>
                 </GlassCard>
+
+                {/* Summary: Which is Best? */}
+                <section>
+                    <h2 className="text-2xl font-bold text-white mb-6 font-display text-center">Hangi Borsa Sizin İçin Uygun?</h2>
+                    <div className="grid md:grid-cols-3 gap-6">
+                        <GlassCard className="p-6 border-l-4 border-l-neon-yellow">
+                            <h3 className="text-lg font-bold text-white mb-2">Binance TR</h3>
+                            <p className="text-neon-yellow font-semibold text-sm mb-3">Düşük Komisyon & Profesyoneller</p>
+                            <p className="text-text-secondary text-sm">
+                                Eğer <strong>en düşük komisyon oranlarını</strong> arıyorsanız ve Global Binance hesabınıza ücretsiz transfer yapmak istiyorsanız en iyi seçenek. Yüksek likidite ve geniş araç seti sunar.
+                            </p>
+                        </GlassCard>
+
+                        <GlassCard className="p-6 border-l-4 border-l-neon-green">
+                            <h3 className="text-lg font-bold text-white mb-2">Paribu</h3>
+                            <p className="text-neon-green font-semibold text-sm mb-3">Kolay Arayüz & Yeni Başlayanlar</p>
+                            <p className="text-text-secondary text-sm">
+                                Kripto paralara <strong>yeni başlıyorsanız</strong> ve en basit arayüzü arıyorsanız Paribu öne çıkar. Hızlı kayıt ve kolay al-sat işlemleri ile kullanıcı dostudur.
+                            </p>
+                        </GlassCard>
+
+                        <GlassCard className="p-6 border-l-4 border-l-neon-blue">
+                            <h3 className="text-lg font-bold text-white mb-2">BtcTurk | PRO</h3>
+                            <p className="text-neon-blue font-semibold text-sm mb-3">Güvenilirlik & Kurumsal Hizmet</p>
+                            <p className="text-text-secondary text-sm">
+                                <strong>7/24 canlı destek</strong> ve güvenilirlik sizin için ön plandaysa BtcTurk idealdir. Bankalarla güçlü entegrasyonu ve köklü geçmişi ile güven verir.
+                            </p>
+                        </GlassCard>
+                    </div>
+                </section>
+
+                {/* FAQ Section */}
+                <section className="max-w-3xl mx-auto">
+                    <h2 className="text-2xl font-bold text-white mb-8 font-display text-center">Sıkça Sorulan Sorular</h2>
+                    <div className="space-y-4">
+                        {faqs.map((faq, index) => (
+                            <GlassCard key={index} className="p-6">
+                                <h3 className="text-lg font-semibold text-white mb-2">{faq.question}</h3>
+                                <p className="text-text-secondary">{faq.answer}</p>
+                            </GlassCard>
+                        ))}
+                    </div>
+                </section>
             </main>
 
             <Footer />

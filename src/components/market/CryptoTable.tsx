@@ -1,20 +1,34 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, ArrowUp, ArrowDown } from 'lucide-react';
+import { Star, ArrowUp, ArrowDown, ChevronDown } from 'lucide-react';
 import { useMarket } from '../../context/MarketContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { Sparkline } from '../charts/Sparkline';
 import { useNavigate } from 'react-router-dom';
 
+const INITIAL_DISPLAY_COUNT = 30;
+const LOAD_MORE_INCREMENT = 50;
+
 export const CryptoTable: React.FC = () => {
-    const { filteredCryptos, favorites, toggleFavorite, loading, error } = useMarket();
-    const { formatPrice, formatLargeNumber, currency } = useCurrency();
+    const { filteredCryptos, favorites, toggleFavorite, isLoading } = useMarket();
+    const { formatPrice, formatLargeNumber } = useCurrency();
     const navigate = useNavigate();
+
+    // Pagination state
+    const [visibleCount, setVisibleCount] = useState(INITIAL_DISPLAY_COUNT);
 
     // Ensure we have data to map
     const cryptosToDisplay = filteredCryptos || [];
+    const displayedCryptos = cryptosToDisplay.slice(0, visibleCount);
+    const remainingCount = cryptosToDisplay.length - visibleCount;
+    const hasMore = remainingCount > 0;
 
-    if (loading && cryptosToDisplay.length === 0) {
+    // Load more handler
+    const handleLoadMore = () => {
+        setVisibleCount(prev => prev + LOAD_MORE_INCREMENT);
+    };
+
+    if (isLoading && cryptosToDisplay.length === 0) {
         return (
             <div className="w-full h-64 flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -22,16 +36,8 @@ export const CryptoTable: React.FC = () => {
         );
     }
 
-    if (error && cryptosToDisplay.length === 0) {
-        return (
-            <div className="w-full p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-center">
-                Veri yüklenirken bir hata oluştu: {error}
-            </div>
-        );
-    }
-
     return (
-        <div className="w-full bg-surface-card/50 backdrop-blur-sm rounded-xl border border-white/5 overflow-hidden shadow-lg">
+        <div className="w-full overflow-hidden">
             <div className="overflow-x-auto">
                 <table className="w-full">
                     <thead>
@@ -49,7 +55,7 @@ export const CryptoTable: React.FC = () => {
                     </thead>
                     <tbody className="divide-y divide-white/5">
                         <AnimatePresence>
-                            {cryptosToDisplay.map((coin) => (
+                            {displayedCryptos.map((coin) => (
                                 <motion.tr
                                     key={coin.id}
                                     layoutId={coin.id}
@@ -60,7 +66,7 @@ export const CryptoTable: React.FC = () => {
                                     onClick={() => navigate(`/coin/${coin.id}`)}
                                 >
                                     <td className="px-4 py-4 text-sm text-text-muted">
-                                        {coin.market_cap_rank}
+                                        {coin.rank}
                                     </td>
                                     <td className="px-4 py-4">
                                         <div className="flex items-center gap-3">
@@ -82,33 +88,33 @@ export const CryptoTable: React.FC = () => {
                                     </td>
                                     <td className="px-4 py-4 text-right whitespace-nowrap">
                                         <div className="text-sm font-medium text-text-primary">
-                                            {formatPrice(coin.current_price)}
+                                            {formatPrice(coin.price)}
                                         </div>
                                     </td>
                                     <td className="px-4 py-4 text-right whitespace-nowrap hidden sm:table-cell">
-                                        <div className={`text-sm font-medium flex items-center justify-end gap-1 ${coin.price_change_percentage_24h >= 0 ? 'text-green-500' : 'text-red-500'
+                                        <div className={`text-sm font-medium flex items-center justify-end gap-1 ${coin.change24h >= 0 ? 'text-green-500' : 'text-red-500'
                                             }`}>
-                                            {coin.price_change_percentage_24h >= 0 ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
-                                            {Math.abs(coin.price_change_percentage_24h).toFixed(2)}%
+                                            {coin.change24h >= 0 ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
+                                            {Math.abs(coin.change24h).toFixed(2)}%
                                         </div>
                                     </td>
                                     <td className="px-4 py-4 text-right whitespace-nowrap hidden md:table-cell">
-                                        <div className={`text-sm font-medium ${coin.price_change_percentage_7d_in_currency >= 0 ? 'text-green-500' : 'text-red-500'
+                                        <div className={`text-sm font-medium ${coin.change7d >= 0 ? 'text-green-500' : 'text-red-500'
                                             }`}>
-                                            {coin.price_change_percentage_7d_in_currency?.toFixed(2)}%
+                                            {coin.change7d?.toFixed(2)}%
                                         </div>
                                     </td>
                                     <td className="px-4 py-4 text-right whitespace-nowrap hidden lg:table-cell text-sm text-text-primary">
-                                        {formatLargeNumber(coin.market_cap)}
+                                        {formatLargeNumber(coin.marketCap)}
                                     </td>
                                     <td className="px-4 py-4 text-right whitespace-nowrap hidden xl:table-cell text-sm text-text-primary">
-                                        {formatLargeNumber(coin.total_volume)}
+                                        {formatLargeNumber(coin.volume24h)}
                                     </td>
                                     <td className="px-4 py-4 hidden lg:table-cell">
                                         <div className="h-10 w-32 ml-auto">
                                             <Sparkline
-                                                data={coin.sparkline_in_7d?.price || []}
-                                                color={coin.price_change_percentage_7d_in_currency >= 0 ? '#22c55e' : '#ef4444'}
+                                                data={coin.sparkline || []}
+                                                color={coin.change7d >= 0 ? '#22c55e' : '#ef4444'}
                                             />
                                         </div>
                                     </td>
@@ -133,7 +139,21 @@ export const CryptoTable: React.FC = () => {
                 </table>
             </div>
 
-            {cryptosToDisplay.length === 0 && !loading && (
+            {/* Load More Button */}
+            {hasMore && (
+                <div className="p-4 border-t border-white/5">
+                    <button
+                        onClick={handleLoadMore}
+                        className="w-full py-3 px-4 bg-gradient-to-r from-primary/10 to-accent/10 hover:from-primary/20 hover:to-accent/20 border border-primary/30 hover:border-primary/50 rounded-lg text-primary font-medium transition-all duration-300 flex items-center justify-center gap-2 group"
+                    >
+                        <span>Daha Fazla Göster</span>
+                        <span className="text-sm text-text-muted">({remainingCount} kalan)</span>
+                        <ChevronDown className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
+                    </button>
+                </div>
+            )}
+
+            {cryptosToDisplay.length === 0 && !isLoading && (
                 <div className="p-12 text-center text-text-muted">
                     Aradığınız kriterlere uygun sonuç bulunamadı.
                 </div>

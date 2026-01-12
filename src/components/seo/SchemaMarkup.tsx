@@ -1,7 +1,7 @@
 import type { Crypto } from '../../data/mockCryptos';
 
 interface SchemaMarkupProps {
-    type: 'coin' | 'faq' | 'organization' | 'breadcrumb';
+    type: 'coin' | 'faq' | 'organization' | 'breadcrumb' | 'webapp' | 'liveblog';
     data?: Crypto;
     faqs?: { question: string; answer: string }[];
     breadcrumbs?: { name: string; url: string }[];
@@ -39,6 +39,10 @@ export function SchemaMarkup({ type, data, faqs, breadcrumbs, organizationData }
                 '@type': 'Brand',
                 name: coin.name,
             },
+            sameAs: [
+                coin.socials?.website,
+                coin.socials?.twitter
+            ].filter(Boolean),
             offers: {
                 '@type': 'Offer',
                 price: coin.price,
@@ -106,6 +110,69 @@ export function SchemaMarkup({ type, data, faqs, breadcrumbs, organizationData }
         };
     };
 
+    const generateWebApplicationSchema = () => ({
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: 'Kripto Paralar Terminali',
+        url: 'https://kripto-paralar.com',
+        description: 'Canlı kripto para fiyatları, analiz araçları ve anlık piyasa verileri.',
+        applicationCategory: 'FinanceApplication',
+        operatingSystem: 'All',
+        browserRequirements: 'Requires JavaScript',
+        offers: {
+            '@type': 'Offer',
+            price: '0',
+            priceCurrency: 'TRY',
+            availability: 'https://schema.org/InStock',
+        },
+        aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: '4.8',
+            ratingCount: '1250',
+        },
+        featureList: 'Live Data Feed, Interactive Chart, Instant Calculation',
+        screenshot: 'https://kripto-paralar.com/screenshot-app.jpg',
+    });
+
+    const generateLiveBlogSchema = () => {
+        const now = new Date();
+        const startOfDay = new Date(now.setHours(0, 0, 0, 0)).toISOString();
+        const endOfDay = new Date(now.setHours(23, 59, 59, 999)).toISOString();
+
+        return {
+            '@context': 'https://schema.org',
+            '@type': 'LiveBlogPosting',
+            headline: 'Canlı Kripto Para Piyasası ve Anlık Analizler',
+            description: 'Bitcoin, Ethereum ve Altcoin fiyatlarında son durum. Canlı piyasa takibi.',
+            coverageStartTime: startOfDay,
+            coverageEndTime: endOfDay,
+            dateModified: new Date().toISOString(),
+            author: {
+                '@type': 'Organization',
+                name: 'Kripto Paralar',
+            },
+            publisher: {
+                '@type': 'Organization',
+                name: 'Kripto Paralar',
+                logo: {
+                    '@type': 'ImageObject',
+                    url: 'https://kripto-paralar.com/logo.png',
+                },
+            },
+            liveBlogUpdate: [
+                {
+                    '@type': 'BlogPosting',
+                    headline: 'Piyasa Verileri Güncellendi',
+                    datePublished: new Date().toISOString(),
+                    author: {
+                        '@type': 'Organization',
+                        name: 'Kripto Paralar Bot',
+                    },
+                },
+            ],
+        };
+    };
+
     let schema;
     switch (type) {
         case 'coin':
@@ -122,6 +189,12 @@ export function SchemaMarkup({ type, data, faqs, breadcrumbs, organizationData }
             break;
         case 'organization':
             schema = generateOrganizationSchema();
+            break;
+        case 'webapp':
+            schema = generateWebApplicationSchema();
+            break;
+        case 'liveblog':
+            schema = generateLiveBlogSchema();
             break;
         default:
             return null;

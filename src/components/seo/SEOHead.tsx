@@ -7,6 +7,11 @@ interface SEOHeadProps {
     ogImage?: string;
     ogType?: string;
     keywords?: string[];
+    dynamicData?: {
+        price?: string;
+        change?: number;
+        symbol?: string;
+    };
 }
 
 /**
@@ -20,8 +25,26 @@ export function SEOHead({
     ogImage = '/og-default.png',
     ogType = 'website',
     keywords = [],
+    dynamicData,
 }: SEOHeadProps) {
-    const fullTitle = `${title} | Kripto Paralar`;
+    let fullTitle = `${title} | Kripto Paralar`;
+
+    // Dynamic Title Logic (Programmatic SEO)
+    if (dynamicData?.price && dynamicData?.symbol) {
+        const arrow = (dynamicData.change || 0) >= 0 ? '▲' : '▼';
+        const changeStr = dynamicData.change ? `(${arrow}%${Math.abs(dynamicData.change).toFixed(1)})` : '';
+        // Format: "Bitcoin (BTC) $95,400 (5%) | Kripto Paralar"
+        // Or if it's homepage: "BTC $95,400 (5%) - Canlı Kripto Borsası..."
+
+        // If title is generic "Canlı Kripto...", we might want to prepend the data
+        if (title.includes('Canlı Kripto')) {
+            fullTitle = `${dynamicData.symbol} ${dynamicData.price} ${changeStr} | ${title}`;
+        } else {
+            // For specific pages, maybe replace or append?
+            fullTitle = `${title} ${dynamicData.price} ${changeStr} | Kripto Paralar`;
+        }
+    }
+
     const siteUrl = 'https://kripto-paralar.com';
     const canonical = canonicalUrl ? `${siteUrl}${canonicalUrl}` : undefined;
 

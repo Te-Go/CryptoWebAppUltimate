@@ -78,7 +78,8 @@ export function MarketProvider({ children }: { children: ReactNode }) {
                                 volume24h: (typeof apiCoin.volume === 'number') ? apiCoin.volume : mockCoin.volume24h,
                                 circulatingSupply: (apiCoin.circulatingSupply && typeof apiCoin.circulatingSupply === 'string')
                                     ? parseFloat(apiCoin.circulatingSupply.replace(/[^0-9.]/g, ''))
-                                    : (typeof apiCoin.circulatingSupply === 'number' ? apiCoin.circulatingSupply : mockCoin.circulatingSupply)
+                                    : (typeof apiCoin.circulatingSupply === 'number' ? apiCoin.circulatingSupply : mockCoin.circulatingSupply),
+                                image: apiCoin.image || mockCoin.image
                             };
                         }
                         return mockCoin; // Return mock data if not found in API (e.g. some long tail coins)

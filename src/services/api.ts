@@ -1,16 +1,40 @@
 /**
- * CollectAPI Service Integration
- * Documentation: https://collectapi.com/api/economy/currency-api
+ * CoinGecko API Service Integration
+ * Documentation: https://www.coingecko.com/en/api/documentation
  */
 
-export interface CollectApiCurrency {
-    code: string;
+// CoinGecko Data Interface (Partial for what we need)
+export interface CoinGeckoCoin {
+    id: string;
+    symbol: string;
     name: string;
-    rate: number;
-    calculatedstr: string;
-    calculated: number;
+    image: string;
+    current_price: number;
+    market_cap: number;
+    market_cap_rank: number;
+    total_volume: number;
+    high_24h: number;
+    low_24h: number;
+    price_change_24h: number;
+    price_change_percentage_24h: number;
+    price_change_percentage_1h_in_currency?: number;
+    price_change_percentage_7d_in_currency?: number;
+    circulating_supply: number;
+    total_supply: number;
+    max_supply: number;
+    sparkline_in_7d?: {
+        price: number[];
+    };
 }
 
+// Keeping the older Response interface wrapper to minimize breaking changes in MarketContext
+// But strictly speaking, CoinGecko returns an array directly, so we'll wrap it.
+export interface CollectApiResponse<T> {
+    success: boolean;
+    result: T[];
+}
+
+// Mapping to match the old 'CollectApiCrypto' shape so MarketContext doesn't break
 export interface CollectApiCrypto {
     code: string;
     name: string;
@@ -23,24 +47,22 @@ export interface CollectApiCrypto {
     volume: number;
     marketCap: number;
     circulatingSupply: string;
+    image?: string;
 }
 
-export interface CollectApiResponse<T> {
-    success: boolean;
-    result: T[];
-}
-
-const API_KEY = import.meta.env.VITE_COLLECTAPI_KEY || 'your_token';
-const BASE_URL = 'https://api.collectapi.com/economy';
+const API_KEY = 'CG-5SK9AskaFhoFYrEdSFcXDmeG'; // Provided by user
+const BASE_URL = 'https://api.coingecko.com/api/v3';
 
 // Cache configuration
-const CACHE_PREFIX = 'crypto_cache_';
-const CACHE_DURATION = 60 * 60 * 1000; // 60 minutes in milliseconds
+const CACHE_PREFIX = 'cg_cache_';
+// 30 req/min = 1 req every 2 seconds.
+// We can cache for 60 seconds (1 minute) to be safe and responsive enough.
+const CACHE_DURATION = 60 * 1000;
 
 /**
- * Fetch with Cache Strategy (Stale-While-Revalidate pattern manually implemented)
+ * Fetch with Cache Strategy
  */
-async function fetchWithCache<T>(endpoint: string, queryParams: string = ''): Promise<CollectApiResponse<T>> {
+async function fetchWithCache<T>(endpoint: string, queryParams: string = ''): Promise<T | null> {
     const cacheKey = `${CACHE_PREFIX}${endpoint}${queryParams}`;
     const cachedItem = localStorage.getItem(cacheKey);
     const now = Date.now();
@@ -49,60 +71,41 @@ async function fetchWithCache<T>(endpoint: string, queryParams: string = ''): Pr
     if (cachedItem) {
         try {
             const { timestamp, data } = JSON.parse(cachedItem);
-            // If cache is fresh (< 60 mins), return data immediately AND DO NOT FETCH
             if (now - timestamp < CACHE_DURATION) {
-                console.log(`[Cache Hit] Serving ${endpoint} from local storage.`);
+                console.log(`[Cache Hit] Serving ${endpoint}`);
                 return data;
             }
-            console.log(`[Cache Stale] Expired ${endpoint}. Fetching new data...`);
         } catch (e) {
             console.warn('Error parsing cache, fetching fresh data.');
         }
     }
 
-    // 2. Fetch Fresh Data (if no cache or stale)
+    // 2. Fetch Fresh Data
     try {
-        const url = `${BASE_URL}${endpoint}${queryParams}`;
-        console.log(`[API Fetch] Requesting ${url}`);
-
-        let apiKeyToUse = API_KEY;
-        // Clean up key if it was pasted with 'apikey ' prefix in .env
-        if (apiKeyToUse.startsWith('apikey ')) {
-            // It's fine, the header expects "apikey token" or just "authorization: apikey token"
-            // If the env var is "apikey xyz", we should verify if we need to add "apikey" again.
-            // Standard format is header: "authorization: apikey your_token"
-            // If env var is "apikey 3jP...", then header value matches.
-        } else {
-            // If just the token, prepend "apikey "
-            apiKeyToUse = `apikey ${apiKeyToUse}`;
-        }
+        const url = `${BASE_URL}${endpoint}${queryParams}&x_cg_demo_api_key=${API_KEY}`;
+        console.log(`[API Fetch] Requesting ${endpoint}`);
 
         const response = await fetch(url, {
             method: 'GET',
             headers: {
-                'content-type': 'application/json',
-                'authorization': apiKeyToUse
+                'accept': 'application/json'
             }
         });
 
-        const data: CollectApiResponse<T> = await response.json();
-
-        if (data.success) {
-            // 3. Update Cache
-            localStorage.setItem(cacheKey, JSON.stringify({
-                timestamp: now,
-                data: data
-            }));
-            return data;
-        } else {
-            console.error('[API Error]', data);
-            // Return stale cache if available as fallback on error
-            if (cachedItem) {
-                const { data: staleData } = JSON.parse(cachedItem);
-                return staleData;
-            }
-            return { success: false, result: [] };
+        if (!response.ok) {
+            console.error(`Status: ${response.status}`);
+            throw new Error(`API Error: ${response.statusText}`);
         }
+
+        const data: T = await response.json();
+
+        // 3. Update Cache
+        localStorage.setItem(cacheKey, JSON.stringify({
+            timestamp: now,
+            data: data
+        }));
+        return data;
+
     } catch (error) {
         console.error('[Network Error]', error);
         // Fallback to cache on network error
@@ -110,24 +113,41 @@ async function fetchWithCache<T>(endpoint: string, queryParams: string = ''): Pr
             const { data: staleData } = JSON.parse(cachedItem);
             return staleData;
         }
-        return { success: false, result: [] };
+        return null;
     }
 }
 
 export const collectApi = {
     /**
-     * Get All Currencies
-     * Endpoint: /currencyToAll
-     */
-    getCurrencies: async (base: string = 'USD'): Promise<CollectApiResponse<CollectApiCurrency>> => {
-        return fetchWithCache<CollectApiCurrency>('/currencyToAll', `?int=10&base=${base}`);
-    },
-
-    /**
-     * Get All Cryptocurrencies
-     * Endpoint: /cripto
+     * Get Cryptos (Mapped to old structure for compatibility)
      */
     getCryptos: async (): Promise<CollectApiResponse<CollectApiCrypto>> => {
-        return fetchWithCache<CollectApiCrypto>('/cripto');
+        // Fetch Top 100 coins in TRY, including sparkline and price change percentages for 1h, 24h, 7d
+        const endpoint = '/coins/markets';
+        const params = '?vs_currency=try&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=1h,24h,7d';
+
+        const data = await fetchWithCache<CoinGeckoCoin[]>(endpoint, params);
+
+        if (!data) {
+            return { success: false, result: [] };
+        }
+
+        // Map CoinGecko response to the shape MarketContext expects
+        const mappedResult: CollectApiCrypto[] = data.map(coin => ({
+            code: coin.symbol.toUpperCase(),
+            name: coin.name,
+            currency: 'TRY',
+            price: coin.current_price,
+            pricestr: `₺${coin.current_price}`,
+            changeHour: coin.price_change_percentage_1h_in_currency || 0,
+            changeDay: coin.price_change_percentage_24h || 0,
+            changeWeek: coin.price_change_percentage_7d_in_currency || 0,
+            volume: coin.total_volume,
+            marketCap: coin.market_cap,
+            circulatingSupply: coin.circulating_supply.toString(),
+            image: coin.image
+        }));
+
+        return { success: true, result: mappedResult };
     }
 };

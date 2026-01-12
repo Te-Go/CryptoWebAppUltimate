@@ -13,6 +13,7 @@
   --color-bg-tertiary: #1A1F26;
   --color-bg-card: rgba(18, 22, 28, 0.85);
   --color-bg-card-hover: rgba(26, 31, 38, 0.95);
+  --color-surface-card: rgba(18, 22, 28, 0.5);
 
   /* Neon Accent Colors */
   --color-neon-cyan: #00E5FF;
@@ -58,17 +59,19 @@
 
 /* Light Theme Overrides (Electric Ice) */
 :root.light {
-  /* Background Colors - Icy/Clean */
+  /* Background Colors - Icy Blue (Unified, no white) */
   --color-bg-primary: #F0F9FF;
   /* Pale Glacial Blue */
-  --color-bg-secondary: #FFFFFF;
-  /* Pure White */
-  --color-bg-tertiary: #E0F2FE;
+  --color-bg-secondary: #E8F4FC;
+  /* Soft Ice Blue (was pure white) */
+  --color-bg-tertiary: #D3E9F7;
   /* Light Blue-Grey */
-  --color-bg-card: rgba(255, 255, 255, 0.7);
-  /* White Frost */
-  --color-bg-card-hover: rgba(255, 255, 255, 0.9);
-
+  --color-bg-card: rgba(200, 225, 245, 0.7);
+  /* Light Blue Frost (was white) */
+  --color-bg-card-hover: rgba(180, 210, 235, 0.85);
+  /* Hovered Blue */
+  --color-surface-card: rgba(200, 225, 245, 0.5);
+  /* Light Blue Semi-transparent */
   /* Text Colors - High Contrast */
   --color-text-primary: #0F172A;
   /* Deep Navy */

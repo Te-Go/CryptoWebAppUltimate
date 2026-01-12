@@ -21,6 +21,7 @@ const PrivacyPolicyPage = lazy(() => import('./pages/LegalPages').then(module =>
 const TermsOfUsePage = lazy(() => import('./pages/LegalPages').then(module => ({ default: module.TermsOfUsePage })));
 const KVKKPage = lazy(() => import('./pages/LegalPages').then(module => ({ default: module.KVKKPage })));
 
+import { ScrollToTop } from './components/layout/ScrollToTop';
 import { InstallPrompt } from './components/pwa/InstallPrompt';
 import { CookieConsent } from './components/layout/CookieConsent';
 
@@ -40,6 +41,7 @@ function App() {
             <PortfolioProvider>
               <ThemeProvider>
                 <BrowserRouter>
+                  <ScrollToTop />
                   <InstallPrompt />
                   <CookieConsent />
                   <Suspense fallback={<PageLoader />}>
@@ -52,6 +54,7 @@ function App() {
 
                       {/* News Routes */}
                       <Route path="/haberler" element={<NewsPage />} />
+                      <Route path="/haberler/kripto/:coinId" element={<NewsPage />} />
                       <Route path="/haberler/:slug" element={<NewsDetailPage />} />
 
                       {/* Blog Routes */}
