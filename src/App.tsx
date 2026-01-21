@@ -10,6 +10,7 @@ import { ThemeProvider } from './context/ThemeContext';
 // Lazy load pages for performance
 const HomePage = lazy(() => import('./pages/HomePage').then(module => ({ default: module.HomePage })));
 const CoinDetailPage = lazy(() => import('./pages/CoinDetailPage').then(module => ({ default: module.CoinDetailPage })));
+const CategoriesPage = lazy(() => import('./pages/CategoriesPage').then(module => ({ default: module.CategoriesPage })));
 const PortfolioPage = lazy(() => import('./pages/PortfolioPage').then(module => ({ default: module.PortfolioPage })));
 const ExchangesPage = lazy(() => import('./pages/ExchangesPage').then(module => ({ default: module.ExchangesPage })));
 const EducationPage = lazy(() => import('./pages/EducationPage').then(module => ({ default: module.EducationPage })));
@@ -17,6 +18,7 @@ const BlogPostPage = lazy(() => import('./pages/BlogPostPage').then(module => ({
 const NewsPage = lazy(() => import('./pages/NewsPage').then(module => ({ default: module.NewsPage })));
 const NewsDetailPage = lazy(() => import('./pages/NewsDetailPage').then(module => ({ default: module.NewsDetailPage })));
 const ContactPage = lazy(() => import('./pages/ContactPage').then(module => ({ default: module.ContactPage })));
+const SearchResultsPage = lazy(() => import('./pages/SearchResultsPage').then(module => ({ default: module.SearchResultsPage })));
 const PrivacyPolicyPage = lazy(() => import('./pages/LegalPages').then(module => ({ default: module.PrivacyPolicyPage })));
 const TermsOfUsePage = lazy(() => import('./pages/LegalPages').then(module => ({ default: module.TermsOfUsePage })));
 const KVKKPage = lazy(() => import('./pages/LegalPages').then(module => ({ default: module.KVKKPage })));
@@ -66,11 +68,13 @@ function App() {
                       <Route path="/kullanim-kosullari" element={<TermsOfUsePage />} />
                       <Route path="/kvkk" element={<KVKKPage />} />
 
+                      {/* Search Route */}
+                      <Route path="/search" element={<SearchResultsPage />} />
+
                       {/* Redirects/Aliases */}
                       <Route path="/markets" element={<HomePage />} />
                       <Route path="/favorites" element={<HomePage />} />
-                      <Route path="/search" element={<HomePage />} />
-                      <Route path="/categories" element={<HomePage />} />
+                      <Route path="/categories" element={<CategoriesPage />} />
                     </Routes>
                   </Suspense>
                 </BrowserRouter>

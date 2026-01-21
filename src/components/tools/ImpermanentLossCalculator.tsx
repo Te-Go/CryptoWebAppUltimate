@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { GlassCard } from '../ui/GlassCard';
 import { NeonButton } from '../ui/NeonButton';
-import { Percent, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Percent, AlertTriangle, ArrowRight, HelpCircle, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function ImpermanentLossCalculator() {
     const [priceChangeA, setPriceChangeA] = useState<number>(0);
     const [priceChangeB, setPriceChangeB] = useState<number>(0);
     const [holdValue, setHoldValue] = useState<number>(1000);
+    const [showHelp, setShowHelp] = useState(false);
     const [results, setResults] = useState<{
         lpValue: number;
         impermanentLoss: number;
@@ -52,10 +54,20 @@ export function ImpermanentLossCalculator() {
             <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-neon-blue/20 rounded-full blur-3xl pointer-events-none" />
 
             <div className="relative z-10 flex-grow flex flex-col">
-                <h3 className="text-lg font-bold text-text-primary mb-2 font-display flex items-center gap-2">
-                    <Percent className="w-5 h-5 text-neon-blue" />
-                    Geçici Kayıp
-                </h3>
+                <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-bold text-text-primary font-display flex items-center gap-2">
+                        <Percent className="w-5 h-5 text-neon-blue" />
+                        Geçici Kayıp
+                    </h3>
+                    <button
+                        onClick={() => setShowHelp(true)}
+                        className="text-text-muted hover:text-neon-cyan transition-colors"
+                        title="Nasıl Çalışır?"
+                    >
+                        <HelpCircle className="w-5 h-5" />
+                    </button>
+                </div>
+
                 <p className="text-xs text-text-muted mb-6">
                     Likidite havuzuna (LP) eklediğiniz varlıkların fiyat değişimi durumunda HODL etmeye göre kaybını hesaplayın.
                 </p>
@@ -132,6 +144,57 @@ export function ImpermanentLossCalculator() {
                     </div>
                 </div>
             </div>
+
+            {/* Help Modal Overlay */}
+            <AnimatePresence>
+                {showHelp && (
+                    <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            className="bg-bg-secondary border border-border rounded-xl p-5 shadow-2xl w-full max-h-full overflow-y-auto"
+                        >
+                            <div className="flex justify-between items-center mb-4">
+                                <h4 className="font-bold text-text-primary flex items-center gap-2">
+                                    <HelpCircle className="w-4 h-4 text-neon-cyan" />
+                                    Geçici Kayıp Nedir?
+                                </h4>
+                                <button onClick={() => setShowHelp(false)} className="text-text-muted hover:text-white">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <div className="space-y-3 text-sm text-text-secondary">
+                                <p>
+                                    <strong className="text-white">Geçici Kayıp (Impermanent Loss),</strong> likidite havuzuna (LP) varlık eklediğinizde, token fiyatlarının başlangıçtaki oranlarına göre değişmesi durumunda oluşan değer farkıdır.
+                                </p>
+                                <div className="bg-bg-tertiary p-3 rounded-lg border border-white/5">
+                                    <p className="text-xs mb-1 font-semibold text-neon-yellow">Özetle:</p>
+                                    <p className="text-xs">
+                                        Varlıklarınızı cüzdanınızda tutsaydınız (HODL) daha karlı olabilirdiniz, ancak LP sağladığınız için bir miktar değer kaybı yaşarsınız.
+                                    </p>
+                                </div>
+                                <p>
+                                    <strong className="text-white">Neden "Geçici"?</strong><br />
+                                    Eğer fiyatlar başlangıç oranına geri dönerse bu kayıp ortadan kalkar. Ancak varlıkları havuzdan çekerseniz kayıp kalıcı (realize) hale gelir.
+                                </p>
+                                <p className="text-xs text-text-muted italic">
+                                    *Bu hesaplamaya LP sağlayarak kazandığınız işlem ücretleri dahil değildir. Genellikle ücret gelirleri bu kaybı telafi edebilir.
+                                </p>
+                            </div>
+
+                            <NeonButton
+                                variant="primary"
+                                className="w-full mt-5 h-9 text-xs"
+                                onClick={() => setShowHelp(false)}
+                            >
+                                Anladım
+                            </NeonButton>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </GlassCard>
     );
 }

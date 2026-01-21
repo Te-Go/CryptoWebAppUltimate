@@ -7,7 +7,6 @@ import { SchemaMarkup } from '../components/seo/SchemaMarkup';
 import { TrustBox } from '../components/seo/TrustBox';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { MarketOverview } from '../components/market/MarketOverview';
-import { HeaderAd } from '../components/ads/AdSlot';
 import { TrendingCards } from '../components/market/TrendingCards';
 import { CurrencySelector } from '../components/market/CurrencySelector';
 import { TimeframeSelector } from '../components/market/TimeframeSelector';
@@ -21,8 +20,24 @@ import { DashboardTools } from '../components/market/DashboardTools';
 import { TimeMachineCalculator } from '../components/tools/TimeMachineCalculator';
 import { ImpermanentLossCalculator } from '../components/tools/ImpermanentLossCalculator';
 
+import { useSearchParams } from 'react-router-dom';
+import { useEffect } from 'react';
+
 export function HomePage() {
-    const { cryptos, isStale } = useMarket();
+    const { cryptos, isStale, setSelectedCategory } = useMarket();
+    const [searchParams] = useSearchParams();
+
+    // Handle URL query for category (e.g. /?category=defi)
+    useEffect(() => {
+        const categoryParam = searchParams.get('category');
+        if (categoryParam) {
+            setSelectedCategory(categoryParam);
+            // Scroll to table if category is selected
+            const tableElement = document.getElementById('crypto-table');
+            if (tableElement) tableElement.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [searchParams, setSelectedCategory]);
+
     // Find BTC for the dynamic title (High traffic/interest signal)
     const btc = cryptos.find(c => c.symbol === 'BTC');
 
@@ -58,8 +73,7 @@ export function HomePage() {
                     {/* Header */}
                     <Header />
 
-                    {/* Header Ad Slot */}
-                    <HeaderAd />
+
 
                     {/* Market Dashboard Grid */}
                     <section className="mb-8">
@@ -90,7 +104,7 @@ export function HomePage() {
                     </section>
 
                     {/* Filters & Crypto Table (Full Width) */}
-                    <section className="glass-card p-6 mt-4">
+                    <section id="crypto-table" className="glass-card p-6 mt-4">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                             <h2 className="text-lg font-semibold text-text-primary font-display">
                                 Piyasa Değerine Göre Kripto Paralar

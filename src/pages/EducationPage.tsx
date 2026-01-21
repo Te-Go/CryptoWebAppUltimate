@@ -2,49 +2,19 @@ import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 import { BottomNav } from '../components/layout/BottomNav';
 import { GlassCard } from '../components/ui/GlassCard';
-import { BookOpen, Shield, Calculator, FileText, ChevronRight } from 'lucide-react';
+import { ChevronRight, Calendar, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { SEOHead } from '../components/seo/SEOHead';
 import { SchemaMarkup } from '../components/seo/SchemaMarkup';
-
-const guides = [
-    {
-        title: 'Bitcoin Nedir?',
-        slug: 'bitcoin-nedir',
-        description: 'Kripto paraların atası Bitcoin hakkında bilmeniz gereken her şey. Tarihçesi, çalışma mantığı ve nasıl üretildiği.',
-        icon: BookOpen,
-        color: 'text-orange-500',
-    },
-    {
-        title: 'Kripto Vergi Rehberi',
-        slug: 'kripto-vergi-turkiye',
-        description: "Türkiye'de kripto para vergilendirmesi nasıl yapılıyor? Yasal düzenlemeler ve bilmeniz gerekenler.",
-        icon: Calculator,
-        color: 'text-green-500',
-    },
-    {
-        title: 'Güvenli Cüzdan Kullanımı',
-        slug: 'guvenli-cuzdan',
-        description: 'Varlıklarınızı borsada mı yoksa soğuk cüzdanda mı saklamalısınız? Metamask ve Ledger kurulum rehberi.',
-        icon: Shield,
-        color: 'text-blue-500',
-    },
-    {
-        title: 'Altcoin Sepeti Nasıl Yapılır?',
-        slug: 'altcoin-sepeti-yapimi',
-        description: 'Risk yönetimi yaparak dengeli bir kripto para portföyü oluşturmanın incelikleri.',
-        icon: FileText,
-        color: 'text-purple-500',
-    },
-];
+import { mockEducationArticles } from '../data/mockEducation';
 
 export function EducationPage() {
     return (
         <div className="min-h-screen bg-bg-primary pb-20 lg:pb-0">
             <SEOHead
-                title="Kripto Para Eğitim Rehberi - Bitcoin, Blockchain ve Analiz"
-                description="Kripto para dünyasını öğrenin. Bitcoin nedir, nasıl alınır, teknik analiz ve güvenli cüzdan kullanımı hakkında ücretsiz eğitimler."
-                keywords={['kripto eğitim', 'bitcoin nedir', 'blockchain eğitimi', 'teknik analiz dersleri']}
+                title="Kripto Para Eğitim Merkezi | Blokzincir ve Yatırım Rehberleri"
+                description="Kripto paralar, blockchain teknolojisi ve güvenli yatırım hakkında kapsamlı eğitimler. Sıfırdan uzmanlığa giden yolda ilk adımı atın."
+                keywords={['kripto eğitim', 'blockchain nedir', 'bitcoin rehberi', 'tekni̇k analiz eğitim', 'kripto sözlük', 'nasıl coin alınır']}
                 canonicalUrl="/egitim"
             />
 
@@ -58,38 +28,72 @@ export function EducationPage() {
 
             <Header />
 
-            <main className="container py-8 space-y-8">
-                <section className="text-center max-w-3xl mx-auto mb-12">
-                    <h1 className="text-3xl md:text-4xl font-bold text-text-primary mb-4 font-display">
-                        Kripto Para Akademi
+            <main className="container py-8 space-y-12">
+                {/* Hero Section */}
+                <section className="text-center max-w-3xl mx-auto">
+                    <h1 className="text-3xl md:text-5xl font-bold text-text-primary mb-6 font-display leading-tight">
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-cyan via-white to-neon-purple">
+                            Kripto Akademi
+                        </span>
                     </h1>
-                    <p className="text-text-secondary text-lg">
-                        Sıfırdan zirveye kripto para dünyasını keşfedin. Ücretsiz rehberler, analizler ve ipuçları.
+                    <p className="text-text-secondary text-lg md:text-xl leading-relaxed">
+                        Kripto para dünyasını anlamak karmaşık olmak zorunda değil.
+                        <br className="hidden md:block" />
+                        Teknolojiyi, piyasayı ve güvenliği uzman kaleminden öğrenin.
                     </p>
                 </section>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {guides.map((guide) => {
-                        const Icon = guide.icon;
-                        return (
-                            <Link key={guide.slug} to={`/egitim/${guide.slug}`} className="block h-full">
-                                <GlassCard className="h-full flex flex-col p-6 hover:border-neon-cyan/50 transition-colors" hover={true}>
-                                    <div className={`w-12 h-12 rounded-xl bg-bg-tertiary flex items-center justify-center mb-6 ${guide.color}`}>
-                                        <Icon className="w-6 h-6" />
+                {/* Article Grid */}
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {mockEducationArticles.map((article) => (
+                        <Link key={article.id} to={`/egitim/${article.slug}`} className="group block h-full">
+                            <GlassCard className="h-full flex flex-col overflow-hidden transition-all duration-300 group-hover:border-neon-cyan/50 group-hover:shadow-[0_0_30px_-5px_var(--neon-cyan)]/20" hover={true}>
+                                {/* Image Container */}
+                                <div className="aspect-video w-full overflow-hidden relative">
+                                    <img
+                                        src={article.image}
+                                        alt={article.title}
+                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-bg-primary/90 to-transparent opacity-60" />
+
+                                    {/* Category Badge */}
+                                    <div className="absolute top-4 right-4">
+                                        <span className="px-3 py-1 rounded-full bg-bg-tertiary/90 backdrop-blur-md border border-white/10 text-xs font-semibold text-neon-cyan shadow-lg">
+                                            {article.category}
+                                        </span>
                                     </div>
-                                    <h2 className="text-xl font-bold text-text-primary mb-3">
-                                        {guide.title}
+                                </div>
+
+                                <div className="p-6 flex flex-col flex-grow relative">
+                                    {/* Metadata */}
+                                    <div className="flex items-center gap-4 text-xs text-text-muted mb-4 uppercase tracking-wider">
+                                        <div className="flex items-center gap-1">
+                                            <Calendar className="w-3 h-3" />
+                                            {article.date}
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <Clock className="w-3 h-3" />
+                                            {article.readTime}
+                                        </div>
+                                    </div>
+
+                                    {/* Content */}
+                                    <h2 className="text-xl font-bold text-text-primary mb-3 line-clamp-2 group-hover:text-neon-cyan transition-colors font-display">
+                                        {article.title}
                                     </h2>
-                                    <p className="text-text-secondary text-sm leading-relaxed mb-6 flex-grow">
-                                        {guide.description}
+                                    <p className="text-text-secondary text-sm leading-relaxed mb-6 line-clamp-3">
+                                        {article.excerpt}
                                     </p>
-                                    <div className="flex items-center text-neon-cyan text-sm font-medium mt-auto">
-                                        Okumaya Başla <ChevronRight className="w-4 h-4 ml-1" />
+
+                                    {/* CTA */}
+                                    <div className="mt-auto pt-4 border-t border-white/5 flex items-center text-sm font-semibold text-neon-cyan group-hover:translate-x-2 transition-transform duration-300">
+                                        Okumaya Devam Et <ChevronRight className="w-4 h-4 ml-1" />
                                     </div>
-                                </GlassCard>
-                            </Link>
-                        );
-                    })}
+                                </div>
+                            </GlassCard>
+                        </Link>
+                    ))}
                 </div>
             </main>
 

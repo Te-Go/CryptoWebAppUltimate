@@ -94,12 +94,12 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         if (converted === 0) {
             formatted = "0.00";
         } else if (converted >= 1000) {
-            formatted = new Intl.NumberFormat(currency === 'TRY' ? 'tr-TR' : 'en-US', {
+            formatted = new Intl.NumberFormat('tr-TR', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
             }).format(converted);
         } else {
-            formatted = new Intl.NumberFormat(currency === 'TRY' ? 'tr-TR' : 'en-US', {
+            formatted = new Intl.NumberFormat('tr-TR', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: converted < 1 ? 6 : 2, // 6 decimal places for small coins
             }).format(converted);
@@ -115,10 +115,15 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         const converted = convertFromTRY(numInTRY);
         const symbol = currencyOption.symbol;
 
-        if (converted >= 1e12) return `${symbol}${(converted / 1e12).toFixed(2)}T`;
-        if (converted >= 1e9) return `${symbol}${(converted / 1e9).toFixed(2)}B`;
-        if (converted >= 1e6) return `${symbol}${(converted / 1e6).toFixed(2)}M`;
-        return `${symbol}${converted.toFixed(2)}`;
+        const formatter = new Intl.NumberFormat('tr-TR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
+
+        if (converted >= 1e12) return `${symbol}${formatter.format(converted / 1e12)}T`;
+        if (converted >= 1e9) return `${symbol}${formatter.format(converted / 1e9)}B`;
+        if (converted >= 1e6) return `${symbol}${formatter.format(converted / 1e6)}M`;
+        return `${symbol}${formatter.format(converted)}`;
     };
 
     return (

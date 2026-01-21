@@ -77,5 +77,35 @@ export const mockNews: NewsItem[] = [
         slug: 'ethereum-etf-onayi-altcoin-rallisi-basliyor-mu',
         category: 'Altcoinler',
         excerpt: "ABD SEC'in Ethereum Spot ETF başvurularını onaylaması beklenirken, piyasada altcoin rallisi beklentisi artıyor."
+    },
+    {
+        id: '8',
+        title: 'Kripto Para Madenciliğinde Yeni Dönem: Yeşil Enerji Zorunluluğu',
+        source: 'KriptoParalar Teknoloji',
+        time: '7 Ocak 2026',
+        image: 'https://picsum.photos/seed/mining/600/400',
+        slug: 'kripto-para-madenciligi-yesil-enerji-zorunlulugu',
+        category: 'Teknoloji',
+        excerpt: 'Avrupa Birliği, kripto para madenciliği tesisleri için %100 yenilenebilir enerji kullanımını zorunlu kılan yeni bir düzenleme hazırlıyor.'
+    },
+    {
+        id: '9',
+        title: 'Solana Ağında Rekor İşlem Hacmi: Meme Coin Çılgınlığı Sürüyor',
+        source: 'KriptoParalar Piyasa',
+        time: '6 Ocak 2026',
+        image: 'https://picsum.photos/seed/solanameme/600/400',
+        slug: 'solana-agi-rekor-islem-hacmi-meme-coin',
+        category: 'Altcoinler',
+        excerpt: 'Solana ağındaki günlük işlem sayısı, yeni çıkan meme coinlerin etkisiyle tüm zamanların en yüksek seviyesine ulaştı.'
+    },
+    {
+        id: '10',
+        title: 'Web3 Oyun Sektörü 2026\'da Patlama Yapabilir: İşte Öne Çıkan Projeler',
+        source: 'KriptoParalar Analiz',
+        time: '5 Ocak 2026',
+        image: 'https://picsum.photos/seed/gaming/600/400',
+        slug: 'web3-oyun-sektoru-2026-beklentileri',
+        category: 'Analiz',
+        excerpt: 'GameFi projeleri, AAA kalitesinde oyunların piyasaya sürülmesiyle birlikte kitlelere ulaşmayı hedefliyor.'
     }
 ];

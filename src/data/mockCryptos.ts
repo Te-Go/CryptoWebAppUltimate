@@ -137,6 +137,15 @@ function generateRandomCoin(rank: number): Crypto {
         archetypeData.developerActivity = 100 + Math.floor(Math.random() * 2000);
     }
 
+    // Assign random ecosystem (Zone) to ensure filters have data
+    const ecosystems = ['ethereum-ecosystem', 'bnb-chain', 'solana-ecosystem', 'polygon', 'arbitrum', 'optimism', 'avalanche', 'base'];
+    if (Math.random() > 0.4) { // 60% chance to belong to a zone
+        const randomEco = ecosystems[Math.floor(Math.random() * ecosystems.length)];
+        if (!categories.includes(randomEco)) {
+            categories.push(randomEco);
+        }
+    }
+
     return {
         id: `${name.toLowerCase()}-${rank}`,
         rank,

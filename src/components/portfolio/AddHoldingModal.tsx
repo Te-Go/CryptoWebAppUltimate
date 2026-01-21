@@ -156,13 +156,13 @@ export function AddHoldingModal({ isOpen, onClose }: AddHoldingModalProps) {
 
                                         {/* Quantity Input */}
                                         <div>
-                                            <label className="block text-sm text-text-muted mb-2">
+                                            <label className="block text-sm text-text-secondary mb-2">
                                                 Miktar
                                             </label>
                                             <input
                                                 type="number"
                                                 step="any"
-                                                placeholder="0.00"
+                                                placeholder="0,00"
                                                 value={quantity}
                                                 onChange={(e) => setQuantity(e.target.value)}
                                                 className="w-full px-4 py-3 bg-bg-tertiary border border-border rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-neon-cyan"
@@ -171,13 +171,13 @@ export function AddHoldingModal({ isOpen, onClose }: AddHoldingModalProps) {
 
                                         {/* Buy Price Input */}
                                         <div>
-                                            <label className="block text-sm text-text-muted mb-2">
+                                            <label className="block text-sm text-text-secondary mb-2">
                                                 Alış Fiyatı (₺)
                                             </label>
                                             <input
                                                 type="number"
                                                 step="any"
-                                                placeholder="0.00"
+                                                placeholder="0,00"
                                                 value={buyPrice}
                                                 onChange={(e) => setBuyPrice(e.target.value)}
                                                 className="w-full px-4 py-3 bg-bg-tertiary border border-border rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-neon-cyan"

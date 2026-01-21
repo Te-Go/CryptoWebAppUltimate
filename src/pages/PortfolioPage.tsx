@@ -10,10 +10,14 @@ import { usePortfolio } from '../context/PortfolioContext';
 import { useMarket } from '../context/MarketContext';
 import { useCurrency } from '../context/CurrencyContext';
 
+import { SEOHead } from '../components/seo/SEOHead';
+import { PortfolioExplanation } from '../components/portfolio/PortfolioExplanation';
+
 export function PortfolioPage() {
     const { holdings, removeHolding } = usePortfolio();
+    // ... stats calculation ...
     const { cryptos } = useMarket();
-    const { formatPrice, formatLargeNumber } = useCurrency();
+    const { formatPrice, formatLargeNumber, currency, setCurrency } = useCurrency();
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // Calculate portfolio stats
@@ -36,23 +40,92 @@ export function PortfolioPage() {
         ? ((pnl / portfolioStats.totalCost) * 100)
         : 0;
 
+    // Schema Markup for Software Application (Tool)
+    const schema = {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Kripto Portföy Takip",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "TRY"
+        },
+        "description": "Ücretsiz ve gizlilik odaklı kripto para portföy takip aracı. Bitcoin, Ethereum ve altcoin yatırımlarınızı anlık takip edin."
+    };
+
     return (
         <div className="min-h-screen bg-bg-primary pb-20 lg:pb-0">
+            <SEOHead
+                title="Ücretsiz Kripto Portföy Takip Aracı | Portföyüm"
+                description="Yatırımlarınızı güvenle takip edin. Bitcoin, Ethereum ve altcoin portföyünüzü tek ekrandan yönetin. Üye olmadan, tamamen ücretsiz."
+                keywords={['kripto portföy', 'portföy takip', 'coin takip', 'bitcoin cüzdan', 'kar zarar hesaplama']}
+                canonicalUrl="/portfolio"
+            />
+            <script type="application/ld+json">
+                {JSON.stringify(schema)}
+            </script>
+
             <Header />
 
             <main className="container py-6 space-y-6">
-                {/* Page Title */}
-                <div className="flex items-center justify-between">
+                {/* Page Title & Controls */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <h1 className="text-2xl font-bold text-text-primary font-display">
                         Portföyüm
                     </h1>
-                    <NeonButton
-                        variant="primary"
-                        onClick={() => setIsModalOpen(true)}
-                    >
-                        <Plus className="w-4 h-4" />
-                        Varlık Ekle
-                    </NeonButton>
+
+                    <div className="flex items-center gap-3">
+                        {/* Currency Toggle */}
+                        <div className="bg-bg-tertiary p-1 rounded-lg border border-border flex items-center">
+                            {(['TRY', 'USD', 'EUR'] as const).map((curr) => (
+                                <button
+                                    key={curr}
+                                    onClick={() => setCurrency(curr)}
+                                    className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${currency === curr
+                                        ? 'bg-bg-card-hover text-neon-cyan shadow-sm'
+                                        : 'text-text-muted hover:text-text-secondary'
+                                        }`}
+                                >
+                                    {curr}
+                                </button>
+                            ))}
+                        </div>
+
+                        <NeonButton
+                            variant="primary"
+                            onClick={() => setIsModalOpen(true)}
+                        >
+                            <Plus className="w-4 h-4" />
+                            Varlık Ekle
+                        </NeonButton>
+                    </div>
+                </div>
+
+                {/* Privacy Notice */}
+                <div className="bg-neon-blue/10 border border-neon-blue/20 rounded-lg p-3 flex items-start gap-3">
+                    <div className="min-w-fit mt-0.5">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="text-neon-blue"
+                        >
+                            <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                    </div>
+                    <p className="text-xs text-text-secondary leading-relaxed">
+                        <strong className="text-neon-blue">Gizlilik Garantisi:</strong> Portföy verileriniz sadece sizin cihazınızda (tarayıcı belleği) saklanır.
+                        Sunucularımıza herhangi bir veri gönderilmez veya kaydedilmez.
+                    </p>
                 </div>
 
                 {/* Portfolio Summary */}
@@ -141,7 +214,10 @@ export function PortfolioPage() {
                                             Değer
                                         </th>
                                         <th className="text-right text-text-muted text-sm font-medium p-4">
-                                            K/Z
+                                            K/Z (%)
+                                        </th>
+                                        <th className="text-right text-text-muted text-sm font-medium p-4">
+                                            Net K/Z
                                         </th>
                                         <th className="w-12"></th>
                                     </tr>
@@ -203,6 +279,12 @@ export function PortfolioPage() {
                                                         {holdingPnlPercent.toFixed(2)}%
                                                     </span>
                                                 </td>
+                                                <td className="p-4 text-right">
+                                                    <span className={`font-medium ${holdingPnl >= 0 ? 'text-profit' : 'text-loss'}`}>
+                                                        {holdingPnl >= 0 ? '+' : ''}
+                                                        {formatPrice(Math.abs(holdingPnl))}
+                                                    </span>
+                                                </td>
                                                 <td className="p-4">
                                                     <button
                                                         onClick={() => removeHolding(holding.coinId)}
@@ -214,15 +296,43 @@ export function PortfolioPage() {
                                             </motion.tr>
                                         );
                                     })}
+
+                                    {/* Total Row */}
+                                    <tr className="bg-bg-tertiary/30 font-bold border-t-2 border-border">
+                                        <td className="p-4 text-text-primary">TOPLAM</td>
+                                        <td className="p-4"></td> {/* Quantity */}
+                                        <td className="p-4"></td> {/* Buy Price */}
+                                        <td className="p-4"></td> {/* Current Price */}
+                                        <td className="p-4 text-right text-text-primary">
+                                            {formatPrice(portfolioStats.totalValue)}
+                                        </td>
+                                        <td className="p-4 text-right">
+                                            <span className={pnl >= 0 ? 'text-profit' : 'text-loss'}>
+                                                {pnl >= 0 ? '+' : ''}
+                                                {pnlPercent.toFixed(2)}%
+                                            </span>
+                                        </td>
+                                        <td className="p-4 text-right">
+                                            <span className={pnl >= 0 ? 'text-profit' : 'text-loss'}>
+                                                {pnl >= 0 ? '+' : ''}
+                                                {formatPrice(Math.abs(pnl))}
+                                            </span>
+                                        </td>
+                                        <td className="p-4"></td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
                     </GlassCard>
                 )}
+
+
+                {/* SEO Content */}
+                <PortfolioExplanation />
             </main>
 
             <BottomNav />
             <AddHoldingModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-        </div>
+        </div >
     );
 }
