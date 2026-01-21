@@ -1,13 +1,9 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import {
     mockCryptos,
     globalStats,
-    topGainers,
-    topLosers,
-    topVolume,
     newListings,
-    trendingCoins,
     categories,
     zones,
     type Crypto,
@@ -20,8 +16,8 @@ interface MarketContextType {
     topGainers: Crypto[];
     topLosers: Crypto[];
     topVolume: Crypto[];
-    newListings: Crypto[];
     trendingCoins: Crypto[];
+    newListings: Crypto[];
     categories: { id: string; name: string; icon: string }[];
     zones: { id: string; name: string }[];
     favorites: string[];
@@ -34,6 +30,7 @@ interface MarketContextType {
     setSearchQuery: (query: string) => void;
     filteredCryptos: Crypto[];
     isLoading: boolean;
+    isStale: boolean; // NEW: Indicates if data is from cache/mock
 }
 
 const MarketContext = createContext<MarketContextType | undefined>(undefined);
@@ -47,8 +44,10 @@ export function MarketProvider({ children }: { children: ReactNode }) {
     const [selectedZone, setSelectedZone] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [isLoading, setIsLoading] = useState(true);
+    const [isStale, setIsStale] = useState(false); // NEW: Track data freshness
     const [cryptos, setCryptos] = useState<Crypto[]>(mockCryptos);
-    const [stats, setStats] = useState<GlobalStats>(globalStats);
+    // Stats are currently static mock data - keeping as basic state for future API integration
+    const [stats] = useState<GlobalStats>(globalStats);
 
     // Fetch Data from API
     useEffect(() => {
@@ -59,7 +58,8 @@ export function MarketProvider({ children }: { children: ReactNode }) {
                 const response = await collectApi.getCryptos();
 
                 if (response.success && response.result.length > 0) {
-                    console.log('API Data Loaded:', response.result.length, 'coins');
+                    console.log('API Verisi Yüklendi:', response.result.length, 'coin');
+                    setIsStale(false); // Fresh data!
 
                     // Map API Data to our Crypto interface
                     // We need to merge with mock data to keep the rich metadata (description, sparkline, etc.) 
@@ -87,10 +87,12 @@ export function MarketProvider({ children }: { children: ReactNode }) {
 
                     setCryptos(updatedCryptos);
                 } else {
-                    console.warn('API returned success=false or empty result. Using mock data.');
+                    console.warn('API başarısız veya boş sonuç döndürdü. Mock/önbellek verisi kullanılıyor.');
+                    setIsStale(true); // Mark as stale
                 }
             } catch (error) {
-                console.error('Failed to fetch market data:', error);
+                console.error('Piyasa verisi alınamadı:', error);
+                setIsStale(true); // Mark as stale on error
             } finally {
                 setIsLoading(false);
             }
@@ -104,6 +106,28 @@ export function MarketProvider({ children }: { children: ReactNode }) {
             prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]
         );
     };
+
+    // --- DYNAMIC TOP LISTS (Phase 2: Data Integrity) ---
+    // Derive these from live 'cryptos' state instead of static mocks
+    const topGainers = useMemo(() =>
+        [...cryptos].sort((a, b) => b.change24h - a.change24h).slice(0, 4),
+        [cryptos]
+    );
+
+    const topLosers = useMemo(() =>
+        [...cryptos].sort((a, b) => a.change24h - b.change24h).slice(0, 4),
+        [cryptos]
+    );
+
+    const topVolume = useMemo(() =>
+        [...cryptos].sort((a, b) => b.volume24h - a.volume24h).slice(0, 4),
+        [cryptos]
+    );
+
+    const trendingCoins = useMemo(() =>
+        [...cryptos].filter(c => c.change24h > 5).sort((a, b) => b.change24h - a.change24h).slice(0, 4),
+        [cryptos]
+    );
 
     // Filter cryptos based on category, zone, and search
     // Use the STATE 'cryptos' instead of imported 'mockCryptos'
@@ -135,9 +159,9 @@ export function MarketProvider({ children }: { children: ReactNode }) {
     return (
         <MarketContext.Provider
             value={{
-                cryptos: cryptos, // Use state
-                stats: stats, // Use state
-                topGainers, // Still using mock derived lists - in a full app these should be derived from 'cryptos' state too
+                cryptos,
+                stats,
+                topGainers,
                 topLosers,
                 topVolume,
                 newListings,
@@ -154,6 +178,7 @@ export function MarketProvider({ children }: { children: ReactNode }) {
                 setSearchQuery,
                 filteredCryptos,
                 isLoading,
+                isStale,
             }}
         >
             {children}
@@ -168,3 +193,4 @@ export function useMarket() {
     }
     return context;
 }
+

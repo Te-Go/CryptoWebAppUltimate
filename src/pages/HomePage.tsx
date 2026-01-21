@@ -4,6 +4,7 @@ import { BottomNav } from '../components/layout/BottomNav';
 import { Footer } from '../components/layout/Footer';
 import { SEOHead } from '../components/seo/SEOHead';
 import { SchemaMarkup } from '../components/seo/SchemaMarkup';
+import { TrustBox } from '../components/seo/TrustBox';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { MarketOverview } from '../components/market/MarketOverview';
 import { HeaderAd } from '../components/ads/AdSlot';
@@ -21,7 +22,7 @@ import { TimeMachineCalculator } from '../components/tools/TimeMachineCalculator
 import { ImpermanentLossCalculator } from '../components/tools/ImpermanentLossCalculator';
 
 export function HomePage() {
-    const { cryptos } = useMarket();
+    const { cryptos, isStale } = useMarket();
     // Find BTC for the dynamic title (High traffic/interest signal)
     const btc = cryptos.find(c => c.symbol === 'BTC');
 
@@ -45,11 +46,10 @@ export function HomePage() {
                     dynamicData={dynamicSEO}
                 />
 
-                {/* Schema Structured Data */}
-                {/* SEO Schema Injection */}
+                {/* Schema Structured Data - Kill Switch: Strip when stale */}
                 <SchemaMarkup type="organization" />
-                <SchemaMarkup type="webapp" />
-                <SchemaMarkup type="liveblog" />
+                <SchemaMarkup type="webapp" isStale={isStale} />
+                <SchemaMarkup type="liveblog" isStale={isStale} />
 
                 <LiveTicker />
 
@@ -114,6 +114,9 @@ export function HomePage() {
 
                     {/* Latest News */}
                     <LatestNews />
+
+                    {/* Trust Box - E-E-A-T Authority Signal */}
+                    <TrustBox lastUpdate={isStale ? null : new Date()} />
 
                     <Footer />
 

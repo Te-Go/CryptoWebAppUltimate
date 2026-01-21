@@ -8,11 +8,13 @@ interface AdSlotProps {
     className?: string;
 }
 
-const sizeMap: Record<AdSlotSize, { width: string; height: string }> = {
-    leaderboard: { width: '728px', height: '90px' },
-    rectangle: { width: '300px', height: '250px' },
-    skyscraper: { width: '160px', height: '600px' },
-    responsive: { width: '100%', height: 'auto' },
+// CLS Safety: Fixed heights per Golden Master SEO Blueprint
+// Reserve space to prevent Cumulative Layout Shift
+const sizeMap: Record<AdSlotSize, { width: string; height: string; minHeight: string }> = {
+    leaderboard: { width: '728px', height: '90px', minHeight: '90px' },
+    rectangle: { width: '300px', height: '250px', minHeight: '250px' },
+    skyscraper: { width: '160px', height: '600px', minHeight: '600px' },
+    responsive: { width: '100%', height: 'auto', minHeight: '100px' },
 };
 
 /**

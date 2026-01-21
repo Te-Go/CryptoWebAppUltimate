@@ -185,10 +185,12 @@ export function CoinDetailPage() {
                                 />
                                 {isFavorite ? 'Favorilerde' : 'Favorilere Ekle'}
                             </NeonButton>
+                            {/* Hidden until affiliate partnership is secured
                             <NeonButton variant="primary">
                                 <ExternalLink className="w-4 h-4" />
                                 Satın Al
                             </NeonButton>
+                            */}
                         </div>
                     </div>
                 </GlassCard>
@@ -314,9 +316,6 @@ export function CoinDetailPage() {
 
                 {/* Price Chart Moved Up */}
 
-                {/* Latest News & Comments */}
-                <LatestNews className="py-2" />
-
                 {/* Price Changes & Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2 grid grid-cols-2 gap-4">
@@ -354,11 +353,14 @@ export function CoinDetailPage() {
 
 
 
-                {/* Smart FAQ */}
+                {/* Smart FAQ - Before news for user intent first */}
                 <PeopleAlsoAsk
                     faqs={faqs}
                     title={`${coin.name} Hakkında Sıkça Sorulan Sorular`}
                 />
+
+                {/* Latest News & Comments - After FAQ for engaged users */}
+                <LatestNews className="py-2" />
             </main>
 
             <Footer />

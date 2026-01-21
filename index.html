@@ -14,5 +14,30 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Speculation Rules API - Per Golden Master SEO Blueprint -->
+    <!-- Pre-render coin detail pages on hover for instant load -->
+    <script type="speculationrules">
+    {
+      "prerender": [
+        {
+          "source": "document",
+          "where": {
+            "selector_matches": "a[href^='/coin/']"
+          },
+          "eagerness": "conservative"
+        }
+      ],
+      "prefetch": [
+        {
+          "source": "document", 
+          "where": {
+            "selector_matches": ".crypto-row-link"
+          },
+          "eagerness": "moderate"
+        }
+      ]
+    }
+    </script>
   </body>
 </html>

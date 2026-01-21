@@ -8,7 +8,7 @@ import { ThemeToggle } from './ThemeToggle';
 export function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
-    const { searchQuery, setSearchQuery } = useMarket();
+    const { searchQuery, setSearchQuery, isStale } = useMarket();
 
     const navLinks = [
         { href: '/', label: 'Piyasalar' },
@@ -19,6 +19,14 @@ export function Header() {
 
     return (
         <header className="sticky top-0 z-50 backdrop-blur-xl bg-bg-primary/80 border-b border-border">
+            {/* Stale Data Indicator */}
+            {isStale && (
+                <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-1.5 text-center">
+                    <span className="text-amber-400 text-xs font-medium">
+                        ⚠️ Veriler güncel olmayabilir (önbellek kullanılıyor)
+                    </span>
+                </div>
+            )}
             <div className="container">
                 <div className="flex items-center justify-between h-16">
                     {/* Logo */}
@@ -28,6 +36,9 @@ export function Header() {
                             alt="Kripto Paralar"
                             className="h-10 w-auto object-contain"
                         />
+                        <span className="hidden sm:inline text-lg font-bold text-text-primary font-display">
+                            Kripto Paralar
+                        </span>
                     </Link>
 
                     {/* Desktop Navigation */}

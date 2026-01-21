@@ -1,5 +1,17 @@
 import type { Crypto } from '../../data/mockCryptos';
 
+// Wikidata Entity Links for major cryptocurrencies (E-E-A-T Authority)
+const WIKIDATA_ENTITIES: Record<string, string> = {
+    bitcoin: 'https://www.wikidata.org/wiki/Q131723',
+    ethereum: 'https://www.wikidata.org/wiki/Q174570',
+    tether: 'https://www.wikidata.org/wiki/Q23038799',
+    xrp: 'https://www.wikidata.org/wiki/Q22337652',
+    bnb: 'https://www.wikidata.org/wiki/Q30588888',
+    solana: 'https://www.wikidata.org/wiki/Q105096604',
+    dogecoin: 'https://www.wikidata.org/wiki/Q8978',
+    cardano: 'https://www.wikidata.org/wiki/Q24657432',
+};
+
 interface SchemaMarkupProps {
     type: 'coin' | 'faq' | 'organization' | 'breadcrumb' | 'webapp' | 'liveblog';
     data?: Crypto;
@@ -11,9 +23,17 @@ interface SchemaMarkupProps {
         logo: string;
         sameAs: string[];
     };
+    /** Kill Switch: If true, strip liveblog/webapp schemas to prevent "stale live" penalty */
+    isStale?: boolean;
 }
 
-export function SchemaMarkup({ type, data, faqs, breadcrumbs, organizationData }: SchemaMarkupProps) {
+export function SchemaMarkup({ type, data, faqs, breadcrumbs, organizationData, isStale = false }: SchemaMarkupProps) {
+    // KILL SWITCH: Per Golden Master Blueprint - strip live schemas when data is stale
+    if (isStale && (type === 'liveblog' || type === 'webapp')) {
+        console.warn(`[SEO Kill Switch] ${type} schema stripped - data is stale`);
+        return null;
+    }
+
     const generateCoinSchema = (coin: Crypto) => {
         // Determine specific schema type based on category
         let schemaType = 'FinancialProduct'; // Default for generic financial asset
@@ -27,6 +47,13 @@ export function SchemaMarkup({ type, data, faqs, breadcrumbs, organizationData }
             additionalType = 'DecentralizedFinance';
         }
 
+        // Build sameAs array with Wikidata entity linking
+        const sameAsLinks = [
+            coin.socials?.website,
+            coin.socials?.twitter,
+            WIKIDATA_ENTITIES[coin.id], // Add Wikidata link if available
+        ].filter(Boolean);
+
         return {
             '@context': 'https://schema.org',
             '@type': schemaType,
@@ -39,10 +66,7 @@ export function SchemaMarkup({ type, data, faqs, breadcrumbs, organizationData }
                 '@type': 'Brand',
                 name: coin.name,
             },
-            sameAs: [
-                coin.socials?.website,
-                coin.socials?.twitter
-            ].filter(Boolean),
+            sameAs: sameAsLinks,
             offers: {
                 '@type': 'Offer',
                 price: coin.price,
@@ -85,7 +109,7 @@ export function SchemaMarkup({ type, data, faqs, breadcrumbs, organizationData }
 
     const generateOrganizationSchema = () => {
         const orgData = organizationData || {
-            name: 'Kripto Paralar',
+            name: 'TG Dijital',
             url: 'https://kripto-paralar.com',
             logo: 'https://kripto-paralar.com/logo.png',
             sameAs: [
@@ -149,11 +173,11 @@ export function SchemaMarkup({ type, data, faqs, breadcrumbs, organizationData }
             dateModified: new Date().toISOString(),
             author: {
                 '@type': 'Organization',
-                name: 'Kripto Paralar',
+                name: 'TG Finans Masası',
             },
             publisher: {
                 '@type': 'Organization',
-                name: 'Kripto Paralar',
+                name: 'TG Dijital',
                 logo: {
                     '@type': 'ImageObject',
                     url: 'https://kripto-paralar.com/logo.png',
@@ -166,7 +190,7 @@ export function SchemaMarkup({ type, data, faqs, breadcrumbs, organizationData }
                     datePublished: new Date().toISOString(),
                     author: {
                         '@type': 'Organization',
-                        name: 'Kripto Paralar Bot',
+                        name: 'TG Finans Masası',
                     },
                 },
             ],
@@ -207,3 +231,4 @@ export function SchemaMarkup({ type, data, faqs, breadcrumbs, organizationData }
         />
     );
 }
+

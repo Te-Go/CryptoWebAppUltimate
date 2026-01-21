@@ -59,59 +59,111 @@ const CACHE_PREFIX = 'cg_cache_';
 // We can cache for 60 seconds (1 minute) to be safe and responsive enough.
 const CACHE_DURATION = 60 * 1000;
 
+// Retry configuration
+const MAX_RETRIES = 3;
+const INITIAL_BACKOFF_MS = 1000;
+
+// --- SAFE STORAGE WRAPPERS ---
+// These prevent crashes from quota limits, private browsing, or corrupted data.
+
+interface CacheEntry<T> {
+    timestamp: number;
+    data: T;
+}
+
+function safeGetItem<T>(key: string): CacheEntry<T> | null {
+    try {
+        const item = localStorage.getItem(key);
+        if (!item) return null;
+        return JSON.parse(item) as CacheEntry<T>;
+    } catch (e) {
+        console.warn(`[Depolama] "${key}" anahtarı okunamadı:`, e);
+        // Attempt to remove corrupted entry
+        try { localStorage.removeItem(key); } catch { /* ignore */ }
+        return null;
+    }
+}
+
+function safeSetItem<T>(key: string, value: CacheEntry<T>): void {
+    try {
+        localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+        console.warn(`[Depolama] "${key}" anahtarı yazılamadı. Kota aşılmış olabilir.`, e);
+        // Optional: clear old cache entries to make space
+    }
+}
+
+// --- FETCH WITH RETRY (Exponential Backoff) ---
+async function fetchWithRetry(url: string, retries = MAX_RETRIES): Promise<Response> {
+    let lastError: Error | null = null;
+    for (let i = 0; i < retries; i++) {
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: { 'accept': 'application/json' }
+            });
+
+            // Success or client error (4xx) - don't retry client errors
+            if (response.ok || (response.status >= 400 && response.status < 500)) {
+                return response;
+            }
+
+            // Server error (5xx) - retry
+            console.warn(`[Yeniden Deneme ${i + 1}/${retries}] Sunucu hatası ${response.status}`);
+            lastError = new Error(`API Hatası: ${response.status} ${response.statusText}`);
+        } catch (error) {
+            // Network error - retry
+            console.warn(`[Yeniden Deneme ${i + 1}/${retries}] Ağ hatası:`, error);
+            lastError = error instanceof Error ? error : new Error(String(error));
+        }
+
+        // Wait before retrying (exponential backoff)
+        if (i < retries - 1) {
+            const delay = INITIAL_BACKOFF_MS * Math.pow(2, i);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+    throw lastError || new Error('Maksimum deneme sayısına ulaşıldı');
+}
+
 /**
- * Fetch with Cache Strategy
+ * Fetch with Cache Strategy (Resilient)
  */
 async function fetchWithCache<T>(endpoint: string, queryParams: string = ''): Promise<T | null> {
     const cacheKey = `${CACHE_PREFIX}${endpoint}${queryParams}`;
-    const cachedItem = localStorage.getItem(cacheKey);
+    const cached = safeGetItem<T>(cacheKey);
     const now = Date.now();
 
     // 1. Check Cache
-    if (cachedItem) {
-        try {
-            const { timestamp, data } = JSON.parse(cachedItem);
-            if (now - timestamp < CACHE_DURATION) {
-                console.log(`[Cache Hit] Serving ${endpoint}`);
-                return data;
-            }
-        } catch (e) {
-            console.warn('Error parsing cache, fetching fresh data.');
-        }
+    if (cached && (now - cached.timestamp < CACHE_DURATION)) {
+        console.log(`[Önbellek] ${endpoint} önbellekten sunuluyor`);
+        return cached.data;
     }
 
-    // 2. Fetch Fresh Data
+    // 2. Fetch Fresh Data with Retry
     try {
         const url = `${BASE_URL}${endpoint}${queryParams}&x_cg_demo_api_key=${API_KEY}`;
-        console.log(`[API Fetch] Requesting ${endpoint}`);
+        console.log(`[API İsteği] ${endpoint} isteniyor`);
 
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'accept': 'application/json'
-            }
-        });
+        const response = await fetchWithRetry(url);
 
         if (!response.ok) {
-            console.error(`Status: ${response.status}`);
-            throw new Error(`API Error: ${response.statusText}`);
+            console.error(`[API Hatası] Durum: ${response.status}`);
+            throw new Error(`API Hatası: ${response.statusText}`);
         }
 
         const data: T = await response.json();
 
-        // 3. Update Cache
-        localStorage.setItem(cacheKey, JSON.stringify({
-            timestamp: now,
-            data: data
-        }));
+        // 3. Update Cache (safely)
+        safeSetItem(cacheKey, { timestamp: now, data });
         return data;
 
     } catch (error) {
-        console.error('[Network Error]', error);
-        // Fallback to cache on network error
-        if (cachedItem) {
-            const { data: staleData } = JSON.parse(cachedItem);
-            return staleData;
+        console.error('[İstek Başarısız]', error);
+        // Fallback to stale cache on any error
+        if (cached) {
+            console.log(`[Eski Önbellek] ${endpoint} için eski veri sunuluyor`);
+            return cached.data;
         }
         return null;
     }
